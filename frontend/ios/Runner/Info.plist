@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>BARO</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>BARO</string>
+
+	<!--
+	============================================================
+	[중요] 네이버 지도 Client ID 설정
+	============================================================
+	보안을 위해 Client ID는 .env 파일에서 관리합니다.
+	이 설정은 플레이스홀더이며, main.dart에서 런타임에
+	.env 파일의 NAVER_MAP_CLIENT_ID 값을 사용하여 SDK를 초기화합니다.
+
+	.env 파일 설정:
+	1. frontend/.env.example을 frontend/.env로 복사
+	2. NAVER_MAP_CLIENT_ID=your_actual_client_id 입력
+	3. .env 파일은 Git에 커밋되지 않습니다 (보안)
+
+	Client ID 발급:
+	- https://www.ncloud.com/ > Console > AI·NAVER API
+	- Application 등록 > Mobile Dynamic Map
+	- iOS Bundle ID: com.baro.baro
+	============================================================
+	주의: 아래 값은 플레이스홀더입니다.
+	실제 Client ID는 Dart 코드(main.dart)에서 .env를 통해 주입됩니다.
+	-->
+	<key>NMFClientId</key>
+	<string></string>
+
+	<!-- 위치 권한 설명 (필수) -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>민원을 정확한 위치에 등록하기 위해 현재 위치 정보가 필요합니다.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>민원을 정확한 위치에 등록하기 위해 현재 위치 정보가 필요합니다.</string>
+
+	<!-- 카메라 및 사진 라이브러리 권한 설명 (필수) -->
+	<key>NSCameraUsageDescription</key>
+	<string>민원 현장 사진을 촬영하기 위해 카메라 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>민원 사진을 선택하기 위해 사진 라이브러리 접근 권한이 필요합니다.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>촬영한 민원 사진을 저장하기 위해 사진 라이브러리 접근 권한이 필요합니다.</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+</dict>
+</plist>

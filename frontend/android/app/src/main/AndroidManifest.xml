@@ -1,0 +1,85 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 위치 권한 (네이버 지도 및 GPS 사용) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- 카메라 및 저장소 권한 (민원 사진 촬영) -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+
+    <application
+        android:label="BARO"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+
+        <!--
+        ============================================================
+        [중요] 네이버 지도 Client ID 설정
+        ============================================================
+        보안을 위해 Client ID는 .env 파일에서 관리합니다.
+        이 meta-data는 플레이스홀더이며, main.dart에서 런타임에
+        .env 파일의 NAVER_MAP_CLIENT_ID 값을 사용하여 SDK를 초기화합니다.
+
+        .env 파일 설정:
+        1. frontend/.env.example을 frontend/.env로 복사
+        2. NAVER_MAP_CLIENT_ID=your_actual_client_id 입력
+        3. .env 파일은 Git에 커밋되지 않습니다 (보안)
+
+        Client ID 발급:
+        - https://www.ncloud.com/ > Console > AI·NAVER API
+        - Application 등록 > Mobile Dynamic Map
+        - Android 패키지명: com.baro.baro
+        ============================================================
+        -->
+        <!--
+        주의: 아래 meta-data는 네이버 지도 SDK가 요구하지만,
+        실제 Client ID는 Dart 코드(main.dart)에서 .env를 통해 주입됩니다.
+        빈 값 또는 플레이스홀더를 유지하세요.
+        -->
+        <meta-data
+            android:name="com.naver.maps.map.CLIENT_ID"
+            android:value=""/>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>
