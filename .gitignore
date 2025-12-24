@@ -23,32 +23,49 @@ migrate_working_dir/
 # is commented out by default.
 #.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
+# ==========================================
+# Frontend (Flutter) Related
+# ==========================================
+frontend/**/doc/api/
+frontend/**/ios/Flutter/.last_build_id
+frontend/.dart_tool/
+frontend/.flutter-plugins-dependencies
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/coverage/
 
 # Symbolication related
-app.*.symbols
+frontend/app.*.symbols
 
 # Obfuscation related
-app.*.map.json
+frontend/app.*.map.json
 
 # Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+frontend/android/app/debug
+frontend/android/app/profile
+frontend/android/app/release
 
 # API Keys and Secrets (IMPORTANT: Never commit these!)
-android/app/src/main/AndroidManifest.xml
-ios/Runner/Info.plist
-.env
-.env.*
-!.env.example
-**/secrets.dart
-**/api_keys.dart
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+frontend/**/secrets.dart
+frontend/**/api_keys.dart
+
+# ==========================================
+# Backend (Django) Related
+# ==========================================
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/.venv/
+backend/venv/
+backend/env/
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/db.sqlite3
+backend/media/
+backend/staticfiles/
+backend/*.log

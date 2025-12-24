@@ -14,63 +14,116 @@
 
 ## 🛠 기술 스택
 
-### Framework & Language
-- **Flutter** (Latest version)
-- **Dart**
-
-### 주요 패키지
-- **State Management**: Riverpod
+### Frontend (Flutter)
+- **Framework**: Flutter 3.38.5 / Dart 3.10.4
+- **State Management**: Riverpod (code generation)
 - **Networking**: Dio + Retrofit
 - **Routing**: GoRouter
 - **Map**: flutter_naver_map (네이버 지도 SDK)
 - **Location**: Geolocator
 - **Image**: image_picker
 - **Storage**: flutter_secure_storage, shared_preferences
+- **Architecture**: Clean Architecture (Domain/Data/Presentation)
 
-## 📁 폴더 구조 (Feature-based)
+### Backend (Django)
+- **Framework**: Django + Django REST Framework
+- **Authentication**: JWT (JSON Web Token)
+- **Database**: PostgreSQL (production) / SQLite (development)
+- **Media Storage**: Local storage (development) / S3 (production)
+
+## 📁 프로젝트 구조
 
 ```
-lib/
-├── main.dart
-├── core/
-│   ├── constants/          # 앱 상수
-│   ├── theme/             # 테마 설정
-│   ├── router/            # 라우팅 설정
-│   ├── network/           # API 클라이언트
-│   └── utils/             # 유틸리티 함수
-├── features/
-│   ├── grievance/         # 민원 기능
-│   │   ├── data/
-│   │   │   ├── models/
-│   │   │   ├── repositories/
-│   │   │   └── data_sources/
-│   │   ├── domain/
-│   │   │   ├── entities/
-│   │   │   ├── repositories/
-│   │   │   └── usecases/
-│   │   └── presentation/
-│   │       ├── pages/
-│   │       ├── widgets/
-│   │       └── providers/
-│   ├── map/               # 지도 기능
-│   └── auth/              # 인증 기능
-└── assets/
-    ├── images/
-    └── icons/
+d:\Proejct_BARO/
+├── frontend/                   # Flutter 앱
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── core/
+│   │   │   ├── constants/     # 앱 상수
+│   │   │   ├── theme/         # 테마 설정
+│   │   │   ├── router/        # 라우팅 설정
+│   │   │   ├── network/       # API 클라이언트 (Dio)
+│   │   │   ├── error/         # Failure & Exception
+│   │   │   └── utils/         # 유틸리티 함수
+│   │   └── features/
+│   │       ├── grievance/     # 민원 기능 (Clean Architecture)
+│   │       │   ├── data/
+│   │       │   │   ├── models/
+│   │       │   │   ├── repositories/
+│   │       │   │   └── datasources/
+│   │       │   ├── domain/
+│   │       │   │   ├── entities/
+│   │       │   │   ├── repositories/
+│   │       │   │   └── usecases/
+│   │       │   └── presentation/
+│   │       │       ├── pages/
+│   │       │       ├── widgets/
+│   │       │       └── providers/
+│   │       ├── map/           # 지도 기능
+│   │       └── auth/          # 인증 기능
+│   ├── assets/
+│   │   ├── images/
+│   │   └── icons/
+│   ├── android/               # Android 설정
+│   ├── ios/                   # iOS 설정
+│   ├── pubspec.yaml
+│   └── .env                   # 환경 변수 (Git 미포함)
+│
+├── backend/                   # Django API 서버
+│   ├── manage.py
+│   ├── config/                # Django 설정
+│   ├── apps/
+│   │   ├── grievance/        # 민원 앱
+│   │   ├── users/            # 사용자 앱
+│   │   └── core/             # 공통 기능
+│   ├── requirements.txt
+│   └── .env                   # 환경 변수 (Git 미포함)
+│
+├── .git/                      # Git 저장소
+├── .gitignore
+└── README.md
 ```
 
 ## 🚀 시작하기
 
 ### 1. 사전 요구사항
 
-- Flutter SDK (3.10.4 이상)
+**Frontend:**
+- Flutter SDK (3.38.5 이상)
 - Dart SDK (3.10.4 이상)
 - Android Studio / Xcode (모바일 개발용)
 - 네이버 클라우드 플랫폼 계정 (지도 API용)
 
-### 2. 네이버 지도 API 설정
+**Backend:**
+- Python 3.10+
+- pip / pipenv
+- PostgreSQL (선택사항, 개발 시 SQLite 사용 가능)
 
-#### 네이버 클라우드 플랫폼에서 Client ID 발급
+### 2. Frontend 설정
+
+#### 2-1. 환경 변수 설정 (.env)
+
+**중요**: 보안을 위해 민감한 정보는 `.env` 파일에 저장합니다.
+
+1. `.env.example` 파일을 복사하여 `.env` 파일 생성:
+   ```bash
+   cd frontend
+   cp .env.example .env
+   ```
+
+2. `.env` 파일을 열고 API 정보를 입력:
+   ```bash
+   # 네이버 지도 API
+   NAVER_MAP_CLIENT_ID=your_naver_map_client_id_here
+
+   # Django 백엔드 API (로컬 개발)
+   API_BASE_URL_DEV=http://localhost:8000/api
+
+   # Django 백엔드 API (프로덕션)
+   API_BASE_URL_PROD=https://your-production-api.com/api
+   ```
+
+### 3. 네이버 지도 API Client ID 발급
 
 1. [네이버 클라우드 플랫폼](https://www.ncloud.com/) 접속
 2. **Console > Services > AI·NAVER API > AI·NAVER API**
@@ -80,36 +133,63 @@ lib/
    - **Android 앱 패키지명**: `com.baro.baro`
    - **iOS Bundle ID**: `com.baro.baro`
 6. **Client ID** 복사
+7. 복사한 Client ID를 `.env` 파일의 `NAVER_MAP_CLIENT_ID`에 입력
 
-#### Android 설정
+⚠️ **주의**: `.env` 파일은 Git에 커밋되지 않습니다. 팀원과 공유할 때는 별도의 안전한 방법을 사용하세요.
 
-`android/app/src/main/AndroidManifest.xml` 파일에서 `YOUR_NAVER_MAP_CLIENT_ID_HERE`를 발급받은 Client ID로 교체:
-
-```xml
-<meta-data
-    android:name="com.naver.maps.map.CLIENT_ID"
-    android:value="YOUR_NAVER_MAP_CLIENT_ID_HERE"/>
-```
-
-#### iOS 설정
-
-`ios/Runner/Info.plist` 파일에서 `YOUR_NAVER_MAP_CLIENT_ID_HERE`를 발급받은 Client ID로 교체:
-
-```xml
-<key>NMFClientId</key>
-<string>YOUR_NAVER_MAP_CLIENT_ID_HERE</string>
-```
-
-### 3. 의존성 설치
+#### 2-2. 의존성 설치
 
 ```bash
+cd frontend
 flutter pub get
 ```
 
-### 4. 앱 실행
+#### 2-3. 앱 실행
 
 ```bash
+cd frontend
 flutter run
+```
+
+### 3. Backend 설정 (Django)
+
+#### 3-1. 가상환경 생성 및 활성화
+
+```bash
+cd backend
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
+```
+
+#### 3-2. 패키지 설치
+
+```bash
+pip install -r requirements.txt
+```
+
+#### 3-3. 환경 변수 설정
+
+```bash
+cp .env.example .env
+# .env 파일을 열고 데이터베이스 설정 등 입력
+```
+
+#### 3-4. 데이터베이스 마이그레이션
+
+```bash
+python manage.py migrate
+```
+
+#### 3-5. 개발 서버 실행
+
+```bash
+python manage.py runserver
+# 서버가 http://localhost:8000 에서 실행됩니다
 ```
 
 ## 🔑 주요 기능 구현 계획
@@ -157,9 +237,21 @@ flutter run
 
 ### 네이버 지도가 표시되지 않는 경우
 
-1. Client ID가 올바르게 설정되었는지 확인
-2. AndroidManifest.xml 및 Info.plist의 패키지명/Bundle ID 확인
-3. 네이버 클라우드 플랫폼에서 앱 등록 정보 재확인
+1. `.env` 파일에 `NAVER_MAP_CLIENT_ID`가 올바르게 설정되었는지 확인
+2. 네이버 클라우드 플랫폼에서 앱 등록 정보 재확인 (패키지명/Bundle ID)
+3. `flutter clean` 후 재빌드 시도
+
+### .env 파일 관련 오류
+
+만약 `.env` 파일을 찾을 수 없다는 오류가 발생하면:
+```bash
+# .env.example을 복사하여 .env 생성
+cp .env.example .env
+
+# .env 파일에 실제 Client ID 입력 후
+flutter pub get
+flutter run
+```
 
 ## 📄 라이선스
 
