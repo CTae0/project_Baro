@@ -134,8 +134,6 @@ d:\Proejct_BARO/
 6. **Client ID** 복사
 7. 복사한 Client ID를 `.env` 파일의 `NAVER_MAP_CLIENT_ID`에 입력
 
-⚠️ **주의**: `.env` 파일은 Git에 커밋되지 않습니다. 팀원과 공유할 때는 별도의 안전한 방법을 사용하세요.
-
 #### 2-2. 의존성 설치
 
 ```bash
