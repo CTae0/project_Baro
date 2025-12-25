@@ -59,11 +59,22 @@ app.*.map.json
 **/secrets.dart
 **/api_keys.dart
 
-# Dependencies
-pubspec.lock
+# Dependencies (keep pubspec.lock for Flutter projects to ensure consistent dependencies)
+# pubspec.lock is usually committed in Flutter apps
 
 # Claude Code
 .claude/
+
+# Firebase/Google Services (if added later)
+google-services.json
+GoogleService-Info.plist
+firebase_options.dart
+
+# iOS Keychain
+*.keychain
+*.keystore
+*.jks
+key.properties
 
 # Temporary files
 NUL
