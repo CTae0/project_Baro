@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../map/presentation/widgets/naver_map_widget.dart';
+import '../../domain/usecases/create_grievance_usecase.dart';
+import '../providers/grievance_providers.dart';
+import '../providers/grievance_list_provider.dart';
 
 /// 민원 작성 페이지
 ///
@@ -24,6 +27,9 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
   // 선택된 위치 정보
   double? _selectedLat;
   double? _selectedLng;
+
+  // 제출 중 상태
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -141,14 +147,23 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _submitGrievance,
-                child: const Text(
-                  '민원 접수하기',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                onPressed: _isSubmitting ? null : _submitGrievance,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        '민원 접수하기',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 16),
@@ -233,29 +248,74 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
   }
 
   /// 민원 제출
-  void _submitGrievance() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // 위치 선택 확인
-      if (_selectedLat == null || _selectedLng == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('지도에서 위치를 선택해주세요'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        return;
-      }
+  Future<void> _submitGrievance() async {
+    // 유효성 검증
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
 
-      // TODO: 실제 API 호출
+    // 위치 선택 확인
+    if (_selectedLat == null || _selectedLng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '민원이 등록되었습니다\n위치: ${_selectedLat!.toStringAsFixed(4)}, ${_selectedLng!.toStringAsFixed(4)}',
-          ),
-          backgroundColor: Colors.green,
+        const SnackBar(
+          content: Text('지도에서 위치를 선택해주세요'),
+          backgroundColor: Colors.orange,
         ),
       );
-      context.pop();
+      return;
+    }
+
+    // 중복 제출 방지
+    if (_isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Django API로 민원 생성
+      final usecase = ref.read(createGrievanceUseCaseProvider);
+      final result = await usecase.call(CreateGrievanceParams(
+        title: _titleController.text.trim(),
+        content: _descriptionController.text.trim(),
+        latitude: _selectedLat!,
+        longitude: _selectedLng!,
+        imagePaths: [], // Phase 2에서 이미지 추가 예정
+      ));
+
+      if (!mounted) return;
+
+      result.fold(
+        // 실패 시
+        (failure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('오류: ${failure.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() => _isSubmitting = false);
+        },
+        // 성공 시
+        (grievance) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('민원이 등록되었습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // 민원 리스트 새로고침
+          ref.invalidate(grievanceListProvider);
+          context.pop();
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('예상치 못한 오류: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _isSubmitting = false);
     }
   }
 }

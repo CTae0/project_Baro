@@ -8,18 +8,18 @@ part 'grievance_remote_datasource.g.dart';
 /// 민원 Remote DataSource (Retrofit API)
 @RestApi()
 abstract class GrievanceApi {
-  factory GrievanceApi(Dio dio, {String baseUrl}) = _GrievanceApi;
+  factory GrievanceApi(Dio dio, {String? baseUrl}) = _GrievanceApi;
 
   /// 민원 리스트 조회
-  @GET('/grievances')
+  @GET('/grievances/')
   Future<List<GrievanceModel>> getGrievances();
 
   /// 민원 상세 조회
-  @GET('/grievances/{id}')
+  @GET('/grievances/{id}/')
   Future<GrievanceModel> getGrievanceById(@Path('id') String id);
 
   /// 민원 생성 (Multipart - 이미지 포함)
-  @POST('/grievances')
+  @POST('/grievances/')
   @MultiPart()
   Future<GrievanceModel> createGrievance(
     @Part(name: 'title') String title,
@@ -30,10 +30,10 @@ abstract class GrievanceApi {
   );
 
   /// 민원 공감 토글
-  @PATCH('/grievances/{id}/like')
+  @PATCH('/grievances/{id}/like/')
   Future<GrievanceModel> toggleLike(@Path('id') String id);
 
   /// 민원 삭제
-  @DELETE('/grievances/{id}')
+  @DELETE('/grievances/{id}/')
   Future<void> deleteGrievance(@Path('id') String id);
 }

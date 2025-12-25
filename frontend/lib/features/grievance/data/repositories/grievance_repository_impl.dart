@@ -8,12 +8,14 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/grievance_entity.dart';
 import '../../domain/repositories/grievance_repository.dart';
 import '../datasources/grievance_remote_datasource.dart';
+import '../models/grievance_model.dart';
 
 /// 민원 Repository 구현체
 class GrievanceRepositoryImpl implements GrievanceRepository {
   final GrievanceApi remoteDataSource;
+  final Dio dio;
 
-  GrievanceRepositoryImpl(this.remoteDataSource);
+  GrievanceRepositoryImpl(this.remoteDataSource, this.dio);
 
   @override
   Future<Either<Failure, List<GrievanceEntity>>> getGrievances() async {
@@ -53,7 +55,28 @@ class GrievanceRepositoryImpl implements GrievanceRepository {
     required List<String> imagePaths,
   }) async {
     try {
-      // 이미지 파일을 MultipartFile로 변환
+      print('[DEBUG] imagePaths length: ${imagePaths.length}');
+      print('[DEBUG] imagePaths.isEmpty: ${imagePaths.isEmpty}');
+
+      // 이미지가 없을 때는 Dio로 직접 JSON 전송 (multipart 대신)
+      if (imagePaths.isEmpty) {
+        print('[DEBUG] Using JSON (no images)');
+        final response = await dio.post(
+          '/grievances/',
+          data: {
+            'title': title,
+            'content': content,
+            'latitude': latitude,
+            'longitude': longitude,
+          },
+        );
+        print('[DEBUG] Response status: ${response.statusCode}');
+        final model = GrievanceModel.fromJson(response.data);
+        return Right(model.toEntity());
+      }
+
+      // 이미지가 있을 때는 Multipart로 전송
+      print('[DEBUG] Using Multipart (with images)');
       final images = <MultipartFile>[];
       for (final path in imagePaths) {
         final file = await MultipartFile.fromFile(path);
@@ -71,8 +94,12 @@ class GrievanceRepositoryImpl implements GrievanceRepository {
     } on SocketException {
       return const Left(NetworkFailure());
     } on DioException catch (e) {
+      print('[DEBUG] DioException: ${e.message}');
+      print('[DEBUG] DioException type: ${e.type}');
+      print('[DEBUG] DioException response: ${e.response?.data}');
       return Left(_handleDioError(e));
     } catch (e) {
+      print('[DEBUG] Unknown error: $e');
       return Left(UnknownFailure(e.toString()));
     }
   }

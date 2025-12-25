@@ -62,10 +62,9 @@ dev_dependencies:
   riverpod_generator: ^2.6.2
   # riverpod_lint: ^2.6.2  # analyzer_plugin 충돌로 임시 비활성화
 
-# analyzer_plugin 버전 충돌 해결을 위한 override
+# Force compatible analyzer_plugin version with analyzer 7.6.0
 dependency_overrides:
-  analyzer: 7.6.0
-  analyzer_plugin: 0.12.0
+  analyzer_plugin: ^0.13.0  # Compatible with analyzer 7.6.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

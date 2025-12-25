@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
-import '../../data/models/grievance_mock_data.dart';
+import '../../domain/entities/grievance_entity.dart';
 
 /// 민원 카드 위젯 (당근마켓/인스타그램 스타일)
 ///
 /// 왼쪽에 사진, 오른쪽에 제목/내용/지역명/공감수를 표시합니다.
 class GrievanceCard extends StatelessWidget {
-  final GrievanceMock grievance;
+  final GrievanceEntity grievance;
   final VoidCallback? onTap;
 
   const GrievanceCard({
@@ -36,11 +37,16 @@ class GrievanceCard extends StatelessWidget {
                   width: 80,
                   height: 80,
                   color: Colors.grey[300],
-                  child: grievance.imageUrl != null
-                      ? Image.network(
-                          grievance.imageUrl!,
+                  child: grievance.images.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: grievance.images.first,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
+                          placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          errorWidget: (context, url, error) {
                             return _buildPlaceholderImage();
                           },
                         )

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
-import '../../data/models/grievance_mock_data.dart';
+import '../providers/grievance_list_provider.dart';
 import '../widgets/grievance_card.dart';
 
 /// 민원 리스트 페이지 (홈 화면)
@@ -17,8 +17,8 @@ class GrievanceListPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 샘플 데이터 가져오기
-    final grievances = GrievanceMock.getSampleData();
+    // Django API에서 민원 데이터 가져오기
+    final grievancesAsync = ref.watch(grievanceListProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -32,22 +32,61 @@ class GrievanceListPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: grievances.isEmpty
-          ? _buildEmptyState(context)
-          : ListView.builder(
-              itemCount: grievances.length,
-              padding: const EdgeInsets.only(top: 8, bottom: 80),
-              itemBuilder: (context, index) {
-                final grievance = grievances[index];
-                return GrievanceCard(
-                  grievance: grievance,
-                  onTap: () {
-                    // 민원 상세 페이지로 이동
-                    context.push('/grievance/${grievance.id}');
-                  },
-                );
-              },
-            ),
+      body: grievancesAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(),
+        ),
+        error: (error, stackTrace) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '데이터를 불러올 수 없습니다',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                error.toString(),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => ref.invalidate(grievanceListProvider),
+                icon: const Icon(Icons.refresh),
+                label: const Text('다시 시도'),
+              ),
+            ],
+          ),
+        ),
+        data: (grievances) {
+          if (grievances.isEmpty) {
+            return _buildEmptyState(context);
+          }
+          return ListView.builder(
+            itemCount: grievances.length,
+            padding: const EdgeInsets.only(top: 8, bottom: 80),
+            itemBuilder: (context, index) {
+              final grievance = grievances[index];
+              return GrievanceCard(
+                grievance: grievance,
+                onTap: () {
+                  // 민원 상세 페이지로 이동
+                  context.push('/grievance/${grievance.id}');
+                },
+              );
+            },
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           context.push(Routes.grievanceCreate);

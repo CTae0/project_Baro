@@ -28,7 +28,8 @@ GrievanceApi grievanceApi(GrievanceApiRef ref) {
 @riverpod
 GrievanceRepository grievanceRepository(GrievanceRepositoryRef ref) {
   final api = ref.watch(grievanceApiProvider);
-  return GrievanceRepositoryImpl(api);
+  final dioClient = ref.watch(dioClientProvider);
+  return GrievanceRepositoryImpl(api, dioClient.dio);
 }
 
 /// GetGrievancesUseCase Provider

@@ -1,0 +1,69 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Web
+/web/flutter_service_worker.js
+/web/manifest.json
+/web/.last_build_id
+
+# Generated files (should be regenerated on each machine)
+**/*.g.dart
+**/*.freezed.dart
+**/*.config.dart
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+**/secrets.dart
+**/api_keys.dart
+
+# Dependencies
+pubspec.lock
+
+# Claude Code
+.claude/
+
+# Temporary files
+NUL
