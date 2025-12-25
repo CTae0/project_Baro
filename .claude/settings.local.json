@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(flutter pub get:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(pip install:*)",
+      "Bash(.venv/Scripts/activate)",
+      "Bash(.venv/Scripts/python.exe -m pip install:*)",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(timeout:*)",
+      "Bash(exit 0)",
+      "Bash(cat:*)",
+      "Bash(dart run build_runner:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(git add:*)",
+      "Bash(flutter run:*)"
     ]
   }
 }

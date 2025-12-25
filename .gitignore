@@ -1,71 +1,22 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# ==========================================
+# Root Level - Common Settings Only
+# ==========================================
+
+# OS
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+Thumbs.db
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# IDE (workspace level)
 .idea/
+*.iml
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Claude Code (root settings)
+.claude/settings.local.json
 
-# ==========================================
-# Frontend (Flutter) Related
-# ==========================================
-frontend/**/doc/api/
-frontend/**/ios/Flutter/.last_build_id
-frontend/.dart_tool/
-frontend/.flutter-plugins-dependencies
-frontend/.pub-cache/
-frontend/.pub/
-frontend/build/
-frontend/coverage/
+# Temporary files
+NUL
+.dart_tool/
 
-# Symbolication related
-frontend/app.*.symbols
-
-# Obfuscation related
-frontend/app.*.map.json
-
-# Android Studio will place build artifacts here
-frontend/android/app/debug
-frontend/android/app/profile
-frontend/android/app/release
-
-# API Keys and Secrets (IMPORTANT: Never commit these!)
-frontend/.env
-frontend/.env.*
-!frontend/.env.example
-frontend/**/secrets.dart
-frontend/**/api_keys.dart
-
-# ==========================================
-# Backend (Django) Related
-# ==========================================
-backend/__pycache__/
-backend/*.py[cod]
-backend/*$py.class
-backend/.venv/
-backend/venv/
-backend/env/
-backend/.env
-backend/.env.*
-!backend/.env.example
-backend/db.sqlite3
-backend/media/
-backend/staticfiles/
-backend/*.log
+# Note: Frontend and Backend have their own .gitignore files
+# - frontend/.gitignore - Flutter/Dart specific settings
+# - backend/.gitignore - Django/Python specific settings
