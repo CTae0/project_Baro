@@ -17,8 +17,10 @@ db.sqlite3-journal
 /media
 /staticfiles
 
-# Environment
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
 .venv/
 venv/
 ENV/
@@ -38,3 +40,9 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Claude Code
+.claude/
+
+# Temporary files
+NUL

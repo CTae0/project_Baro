@@ -75,9 +75,8 @@ class Grievance(models.Model):
             self.point = Point(self.longitude, self.latitude, srid=4326)
         super().save(*args, **kwargs)
 
-    @property
-    def like_count(self):
-        """좋아요 개수"""
+    def get_like_count(self):
+        """좋아요 개수 (annotate 미사용 시에만 호출)"""
         return self.likes.count()
 
     def is_liked_by(self, user):
