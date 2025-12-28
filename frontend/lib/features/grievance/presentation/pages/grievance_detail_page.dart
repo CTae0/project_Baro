@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 
+import '../../domain/entities/grievance_category.dart';
+import '../../../map/presentation/widgets/naver_map_widget.dart';
 import '../providers/grievance_detail_provider.dart';
 
 /// 민원 상세 페이지
@@ -93,6 +95,23 @@ class GrievanceDetailPage extends ConsumerWidget {
                           fontWeight: FontWeight.bold,
                         ),
                   ),
+                  const SizedBox(height: 8),
+
+                  // 카테고리 배지
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      GrievanceCategory.fromValue(grievance.category).label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                    ),
+                  ),
                   const SizedBox(height: 16),
 
                   // 위치 및 날짜
@@ -123,6 +142,16 @@ class GrievanceDetailPage extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+
+                  // 지도 위젯
+                  NaverMapWidget(
+                    height: 250,
+                    readOnly: true,
+                    initialLatitude: grievance.latitude,
+                    initialLongitude: grievance.longitude,
+                  ),
+                  const SizedBox(height: 16),
                   const Divider(height: 32),
 
                   // 내용

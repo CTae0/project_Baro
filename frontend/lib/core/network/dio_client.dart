@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,10 +11,8 @@ class DioClient {
   final Logger _logger = Logger();
 
   DioClient({String? baseUrl}) {
-    // .env에서 API URL 읽기
-    final apiUrl = baseUrl ??
-        dotenv.env['API_BASE_URL_DEV'] ??
-        'http://localhost:8000/api';
+    // .env에서 API URL 읽기 (플랫폼별 자동 선택)
+    final apiUrl = baseUrl ?? _getApiUrl();
 
     _dio = Dio(
       BaseOptions(
@@ -43,6 +43,35 @@ class DioClient {
   }
 
   Dio get dio => _dio;
+
+  /// 플랫폼별 API URL 자동 선택
+  String _getApiUrl() {
+    // 웹 환경에서는 localhost 사용
+    if (kIsWeb) {
+      final webUrl = dotenv.env['API_BASE_URL_WEB'] ?? 'http://localhost:8000/api';
+      _logger.i('Platform: Web - Using API URL: $webUrl');
+      return webUrl;
+    }
+
+    // iOS 시뮬레이터에서는 localhost 사용
+    if (!kIsWeb && Platform.isIOS) {
+      final iosUrl = dotenv.env['API_BASE_URL_WEB'] ?? 'http://localhost:8000/api';
+      _logger.i('Platform: iOS - Using API URL: $iosUrl');
+      return iosUrl;
+    }
+
+    // Android 에뮬레이터에서는 10.0.2.2 사용
+    if (!kIsWeb && Platform.isAndroid) {
+      final androidUrl = dotenv.env['API_BASE_URL_DEV'] ?? 'http://10.0.2.2:8000/api';
+      _logger.i('Platform: Android - Using API URL: $androidUrl');
+      return androidUrl;
+    }
+
+    // 기타 플랫폼 (기본값)
+    final defaultUrl = dotenv.env['API_BASE_URL_DEV'] ?? 'http://localhost:8000/api';
+    _logger.i('Platform: Other - Using API URL: $defaultUrl');
+    return defaultUrl;
+  }
 
   /// 커스텀 인터셉터
   InterceptorsWrapper _createInterceptor() {

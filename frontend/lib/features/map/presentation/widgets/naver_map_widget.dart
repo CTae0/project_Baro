@@ -12,11 +12,17 @@ import 'package:geolocator/geolocator.dart';
 class NaverMapWidget extends StatefulWidget {
   final double height;
   final Function(double lat, double lng)? onLocationSelected;
+  final bool readOnly;
+  final double? initialLatitude;
+  final double? initialLongitude;
 
   const NaverMapWidget({
     super.key,
     this.height = 200,
     this.onLocationSelected,
+    this.readOnly = false,
+    this.initialLatitude,
+    this.initialLongitude,
   });
 
   @override
@@ -32,7 +38,15 @@ class _NaverMapWidgetState extends State<NaverMapWidget> {
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    if (widget.readOnly && widget.initialLatitude != null && widget.initialLongitude != null) {
+      // 읽기 전용 모드: 초기 좌표로 설정
+      setState(() {
+        _currentPosition = NLatLng(widget.initialLatitude!, widget.initialLongitude!);
+        _isLoading = false;
+      });
+    } else {
+      _getCurrentLocation();
+    }
   }
 
   /// GPS 현재 위치 가져오기
@@ -142,6 +156,9 @@ class _NaverMapWidgetState extends State<NaverMapWidget> {
             }
           },
           onMapTapped: (point, latLng) {
+            // 읽기 전용 모드에서는 탭 무시
+            if (widget.readOnly) return;
+
             // 지도 탭 시 마커 위치 변경
             _addMarker(latLng);
 

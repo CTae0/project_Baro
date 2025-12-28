@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../map/presentation/widgets/naver_map_widget.dart';
 import '../../domain/entities/grievance_category.dart';
@@ -31,6 +34,10 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
 
   // 선택된 카테고리 (기본값: etc)
   GrievanceCategory _selectedCategory = GrievanceCategory.etc;
+
+  // 이미지 선택 관련
+  final ImagePicker _picker = ImagePicker();
+  List<XFile> _selectedImages = [];
 
   // 제출 중 상태
   bool _isSubmitting = false;
@@ -229,57 +236,185 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
         ),
         const SizedBox(height: 8),
         Text(
-          '민원 현장 사진을 추가하세요 (선택사항)',
+          '민원 현장 사진을 추가하세요 (선택사항, 최대 10개)',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
               ),
         ),
         const SizedBox(height: 12),
-        InkWell(
-          onTap: _pickImages,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 2,
-                style: BorderStyle.solid,
-              ),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '카메라 / 갤러리',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
+
+        // 선택된 이미지가 있으면 미리보기 표시
+        if (_selectedImages.isNotEmpty) ...[
+          _buildImagePreview(),
+          const SizedBox(height: 12),
+        ],
+
+        // 이미지 추가 버튼들
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickImages,
+                icon: const Icon(Icons.photo_library),
+                label: const Text('갤러리'),
               ),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _pickImageFromCamera,
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('카메라'),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  /// 이미지 선택 (임시)
-  void _pickImages() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('사진 첨부 기능은 향후 구현 예정입니다')),
+  /// 이미지 미리보기 위젯
+  Widget _buildImagePreview() {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _selectedImages.length,
+        itemBuilder: (context, index) {
+          final image = _selectedImages[index];
+          return Container(
+            width: 100,
+            height: 100,
+            margin: const EdgeInsets.only(right: 8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 이미지 표시
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(image.path),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+
+                // 삭제 버튼
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () => _removeImage(index),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 순서 표시 (왼쪽 하단)
+                Positioned(
+                  bottom: 4,
+                  left: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  /// 갤러리에서 여러 이미지 선택
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile> images = await _picker.pickMultiImage();
+
+      if (images.isEmpty) return;
+
+      // 기존 선택 + 새 선택 합쳐서 최대 10개
+      final totalImages = _selectedImages.length + images.length;
+
+      if (totalImages > 10) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('최대 10개까지 선택 가능합니다')),
+        );
+
+        // 10개까지만 추가
+        final remaining = 10 - _selectedImages.length;
+        setState(() {
+          _selectedImages.addAll(images.take(remaining));
+        });
+      } else {
+        setState(() {
+          _selectedImages.addAll(images);
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('이미지 선택 실패: $e')),
+      );
+    }
+  }
+
+  /// 카메라로 사진 촬영
+  Future<void> _pickImageFromCamera() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+      if (image == null) return;
+
+      if (_selectedImages.length >= 10) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('최대 10개까지 선택 가능합니다')),
+        );
+        return;
+      }
+
+      setState(() {
+        _selectedImages.add(image);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('사진 촬영 실패: $e')),
+      );
+    }
+  }
+
+  /// 선택된 이미지 삭제
+  void _removeImage(int index) {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
   }
 
   /// 민원 제출
@@ -314,7 +449,7 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
         category: _selectedCategory.value,
         latitude: _selectedLat!,
         longitude: _selectedLng!,
-        imagePaths: [], // Phase 2에서 이미지 추가 예정
+        imagePaths: _selectedImages.map((img) => img.path).toList(),
       ));
 
       if (!mounted) return;

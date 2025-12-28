@@ -47,6 +47,7 @@ class GrievanceViewSet(viewsets.ModelViewSet):
 
     permission_classes = []  # 임시로 인증 비활성화 (테스트용)
     pagination_class = None  # 페이지네이션 임시 비활성화 (Flutter 테스트용)
+    parser_classes = [MultiPartParser, FormParser, JSONParser]  # 모든 액션에서 multipart 지원
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'location', 'category']
     search_fields = ['title', 'content', 'location']  # 검색 가능 필드
@@ -60,12 +61,6 @@ class GrievanceViewSet(viewsets.ModelViewSet):
         elif self.action == 'retrieve':
             return GrievanceDetailSerializer
         return GrievanceListSerializer
-
-    def get_parsers(self):
-        """생성 시 Multipart 파서 사용"""
-        if hasattr(self, 'action') and self.action == 'create':
-            return [MultiPartParser(), FormParser(), JSONParser()]
-        return [JSONParser()]
 
     def create(self, request, *args, **kwargs):
         """
