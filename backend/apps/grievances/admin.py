@@ -29,14 +29,14 @@ class GrievanceImageInline(admin.TabularInline):
 @admin.register(Grievance)
 class GrievanceAdmin(GISModelAdmin):
     """민원 관리자 페이지 (지도 위젯 포함)"""
-    list_display = ['title', 'location', 'status', 'user_email', 'like_count_display', 'created_at']
-    list_filter = ['status', 'created_at', 'location']
+    list_display = ['title', 'category', 'location', 'status', 'user_email', 'like_count_display', 'created_at']
+    list_filter = ['category', 'status', 'created_at', 'location']
     search_fields = ['title', 'content', 'location', 'user__email']
     inlines = [GrievanceImageInline]
 
     fieldsets = (
         ('기본 정보', {
-            'fields': ('user', 'title', 'content', 'status')
+            'fields': ('user', 'category', 'title', 'content', 'status')
         }),
         ('위치', {
             'fields': ('location', 'latitude', 'longitude', 'point')

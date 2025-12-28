@@ -31,7 +31,7 @@ class GrievanceListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grievance
         fields = [
-            'id', 'title', 'content', 'location',
+            'id', 'title', 'content', 'category', 'location',
             'latitude', 'longitude', 'like_count', 'is_liked',
             'images', 'created_at', 'updated_at', 'status',
             'user_id', 'user_name'
@@ -82,7 +82,7 @@ class GrievanceCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Grievance
-        fields = ['id', 'title', 'content', 'latitude', 'longitude', 'images', 'status']
+        fields = ['id', 'title', 'content', 'category', 'latitude', 'longitude', 'images', 'status']
         read_only_fields = ['id', 'status']
 
     def validate_latitude(self, value):
@@ -95,6 +95,15 @@ class GrievanceCreateSerializer(serializers.ModelSerializer):
         """경도 범위 검증 (-180 ~ 180)"""
         if not -180 <= value <= 180:
             raise serializers.ValidationError("경도는 -180에서 180 사이여야 합니다")
+        return value
+
+    def validate_category(self, value):
+        """카테고리 유효성 검증"""
+        valid_categories = [choice[0] for choice in Grievance.CATEGORY_CHOICES]
+        if value not in valid_categories:
+            raise serializers.ValidationError(
+                f"유효하지 않은 카테고리입니다. 가능한 값: {', '.join(valid_categories)}"
+            )
         return value
 
     def create(self, validated_data):

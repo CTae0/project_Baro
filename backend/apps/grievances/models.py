@@ -23,6 +23,16 @@ class Grievance(models.Model):
         ('resolved', '완료'),
     ]
 
+    CATEGORY_CHOICES = [
+        ('traffic', '교통/주차'),
+        ('env', '환경/위생'),
+        ('safety', '안전/치안'),
+        ('facility', '공원/시설'),
+        ('animal', '동물'),
+        ('admin', '일반행정'),
+        ('etc', '기타'),
+    ]
+
     # 기본 정보
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(
@@ -37,6 +47,13 @@ class Grievance(models.Model):
     # 내용
     title = models.CharField('제목', max_length=200, db_index=True)
     content = models.TextField('내용')
+    category = models.CharField(
+        '카테고리',
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default='etc',
+        db_index=True
+    )
     status = models.CharField(
         '상태',
         max_length=20,
@@ -67,7 +84,7 @@ class Grievance(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.title} ({self.location})"
+        return f"[{self.get_category_display()}] {self.title} ({self.location})"
 
     def save(self, *args, **kwargs):
         """저장 시 Point 객체 자동 생성"""

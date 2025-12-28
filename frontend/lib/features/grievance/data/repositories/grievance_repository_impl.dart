@@ -50,6 +50,7 @@ class GrievanceRepositoryImpl implements GrievanceRepository {
   Future<Either<Failure, GrievanceEntity>> createGrievance({
     required String title,
     required String content,
+    required String category,
     required double latitude,
     required double longitude,
     required List<String> imagePaths,
@@ -66,6 +67,7 @@ class GrievanceRepositoryImpl implements GrievanceRepository {
           data: {
             'title': title,
             'content': content,
+            'category': category,
             'latitude': latitude,
             'longitude': longitude,
           },
@@ -86,6 +88,7 @@ class GrievanceRepositoryImpl implements GrievanceRepository {
       final model = await remoteDataSource.createGrievance(
         title,
         content,
+        category,
         latitude,
         longitude,
         images,

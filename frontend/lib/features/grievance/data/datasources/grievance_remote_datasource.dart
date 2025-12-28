@@ -24,6 +24,7 @@ abstract class GrievanceApi {
   Future<GrievanceModel> createGrievance(
     @Part(name: 'title') String title,
     @Part(name: 'content') String content,
+    @Part(name: 'category') String category,
     @Part(name: 'latitude') double latitude,
     @Part(name: 'longitude') double longitude,
     @Part(name: 'images') List<MultipartFile> images,

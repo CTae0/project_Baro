@@ -12,6 +12,7 @@ class GrievanceModel {
   final String id;
   final String title;
   final String content;
+  final String category;
   final String location;
   final double latitude;
   final double longitude;
@@ -34,6 +35,7 @@ class GrievanceModel {
     required this.id,
     required this.title,
     required this.content,
+    required this.category,
     required this.location,
     required this.latitude,
     required this.longitude,
@@ -60,6 +62,7 @@ class GrievanceModel {
       id: id,
       title: title,
       content: content,
+      category: category,
       location: location,
       latitude: latitude,
       longitude: longitude,
@@ -80,6 +83,7 @@ class GrievanceModel {
       id: entity.id,
       title: entity.title,
       content: entity.content,
+      category: entity.category,
       location: entity.location,
       latitude: entity.latitude,
       longitude: entity.longitude,

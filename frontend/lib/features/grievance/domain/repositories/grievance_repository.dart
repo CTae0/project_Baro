@@ -17,6 +17,7 @@ abstract class GrievanceRepository {
   Future<Either<Failure, GrievanceEntity>> createGrievance({
     required String title,
     required String content,
+    required String category,
     required double latitude,
     required double longitude,
     required List<String> imagePaths,

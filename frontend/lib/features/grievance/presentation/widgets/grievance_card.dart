@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../domain/entities/grievance_entity.dart';
+import '../../domain/entities/grievance_category.dart';
 
 /// 민원 카드 위젯 (당근마켓/인스타그램 스타일)
 ///
@@ -67,6 +68,27 @@ class GrievanceCard extends StatelessWidget {
                       style: theme.textTheme.headlineSmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // 카테고리 배지
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        GrievanceCategory.fromValue(grievance.category).label,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[700],
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 4),

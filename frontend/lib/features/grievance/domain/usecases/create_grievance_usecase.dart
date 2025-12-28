@@ -8,6 +8,7 @@ import '../repositories/grievance_repository.dart';
 class CreateGrievanceParams {
   final String title;
   final String content;
+  final String category;
   final double latitude;
   final double longitude;
   final List<String> imagePaths;
@@ -15,6 +16,7 @@ class CreateGrievanceParams {
   CreateGrievanceParams({
     required this.title,
     required this.content,
+    required this.category,
     required this.latitude,
     required this.longitude,
     required this.imagePaths,
@@ -31,6 +33,7 @@ class CreateGrievanceUseCase {
     return repository.createGrievance(
       title: params.title,
       content: params.content,
+      category: params.category,
       latitude: params.latitude,
       longitude: params.longitude,
       imagePaths: params.imagePaths,

@@ -48,7 +48,7 @@ class GrievanceViewSet(viewsets.ModelViewSet):
     permission_classes = []  # 임시로 인증 비활성화 (테스트용)
     pagination_class = None  # 페이지네이션 임시 비활성화 (Flutter 테스트용)
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['status', 'location']
+    filterset_fields = ['status', 'location', 'category']
     search_fields = ['title', 'content', 'location']  # 검색 가능 필드
     ordering_fields = ['created_at', 'updated_at', 'like_count']
     ordering = ['-created_at']  # 최신순 정렬

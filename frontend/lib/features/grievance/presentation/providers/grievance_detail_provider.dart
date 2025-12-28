@@ -37,6 +37,7 @@ class GrievanceDetail extends _$GrievanceDetail {
           id: grievance.id,
           title: grievance.title,
           content: grievance.content,
+          category: grievance.category,
           location: grievance.location,
           latitude: grievance.latitude,
           longitude: grievance.longitude,

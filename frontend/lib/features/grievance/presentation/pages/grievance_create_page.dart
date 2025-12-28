@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../map/presentation/widgets/naver_map_widget.dart';
+import '../../domain/entities/grievance_category.dart';
 import '../../domain/usecases/create_grievance_usecase.dart';
 import '../providers/grievance_providers.dart';
 import '../providers/grievance_list_provider.dart';
@@ -27,6 +28,9 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
   // 선택된 위치 정보
   double? _selectedLat;
   double? _selectedLng;
+
+  // 선택된 카테고리 (기본값: etc)
+  GrievanceCategory _selectedCategory = GrievanceCategory.etc;
 
   // 제출 중 상태
   bool _isSubmitting = false;
@@ -69,6 +73,37 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return '제목을 입력해주세요';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // 카테고리 선택
+            DropdownButtonFormField<GrievanceCategory>(
+              initialValue: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: '카테고리',
+                hintText: '민원 카테고리를 선택하세요',
+              ),
+              isExpanded: true,
+              items: GrievanceCategory.values.map((category) {
+                return DropdownMenuItem(
+                  value: category,
+                  child: Text(
+                    category.label,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() => _selectedCategory = value);
+                }
+              },
+              validator: (value) {
+                if (value == null) {
+                  return '카테고리를 선택해주세요';
                 }
                 return null;
               },
@@ -276,6 +311,7 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
       final result = await usecase.call(CreateGrievanceParams(
         title: _titleController.text.trim(),
         content: _descriptionController.text.trim(),
+        category: _selectedCategory.value,
         latitude: _selectedLat!,
         longitude: _selectedLng!,
         imagePaths: [], // Phase 2에서 이미지 추가 예정

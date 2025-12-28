@@ -11,6 +11,7 @@ class GrievanceEntity with _$GrievanceEntity {
     required String id,
     required String title,
     required String content,
+    required String category,
     required String location,
     required double latitude,
     required double longitude,
