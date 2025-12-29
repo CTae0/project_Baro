@@ -9,6 +9,12 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    # Ignore Retrofit generated code errorLogger signature mismatch
+    # This is a known issue with retrofit_generator 9.7.0 and retrofit 4.9.1
+    not_enough_positional_arguments: ignore
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

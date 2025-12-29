@@ -41,9 +41,25 @@
         실제 Client ID는 Dart 코드(main.dart)에서 .env를 통해 주입됩니다.
         빈 값 또는 플레이스홀더를 유지하세요.
         -->
-        <meta-data
+        <!-- <meta-data
             android:name="com.naver.maps.map.CLIENT_ID"
-            android:value=""/>
+            android:value=""/> -->
+
+        <!-- Kakao SDK OAuth 인증 Activity -->
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- kakao{NATIVE_APP_KEY}://oauth 형식 -->
+                <data
+                    android:host="oauth"
+                    android:scheme="kakaofb8d6f1e77ac14f762d560d85637996a" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".MainActivity"

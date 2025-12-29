@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 
 /// Dio HTTP 클라이언트 설정
@@ -77,11 +78,11 @@ class DioClient {
   InterceptorsWrapper _createInterceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
-        // TODO: 토큰이 있다면 헤더에 추가
-        // final token = await _getAuthToken();
-        // if (token != null) {
-        //   options.headers['Authorization'] = 'Bearer $token';
-        // }
+        // JWT 토큰 자동 주입
+        final token = await _getAuthToken();
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
 
         _logger.d('REQUEST[${options.method}] => PATH: ${options.path}');
         return handler.next(options);
@@ -98,14 +99,68 @@ class DioClient {
         );
         _logger.e('ERROR MESSAGE: ${error.message}');
 
-        // 401 Unauthorized 처리
+        // 401 Unauthorized 처리 - 토큰 갱신 시도
         if (error.response?.statusCode == 401) {
-          // TODO: 토큰 갱신 또는 로그아웃 처리
+          try {
+            final newToken = await _refreshAuthToken();
+            if (newToken != null) {
+              // 토큰 갱신 성공 - 원래 요청 재시도
+              error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
+              final cloneReq = await _dio.request(
+                error.requestOptions.path,
+                options: Options(
+                  method: error.requestOptions.method,
+                  headers: error.requestOptions.headers,
+                ),
+                data: error.requestOptions.data,
+                queryParameters: error.requestOptions.queryParameters,
+              );
+              return handler.resolve(cloneReq);
+            }
+          } catch (e) {
+            _logger.e('Token refresh failed: $e');
+            // 토큰 갱신 실패 - 로그아웃 필요
+          }
         }
 
         return handler.next(error);
       },
     );
+  }
+
+  /// Access Token 가져오기
+  Future<String?> _getAuthToken() async {
+    const storage = FlutterSecureStorage();
+    return await storage.read(key: 'access_token');
+  }
+
+  /// JWT 토큰 갱신
+  Future<String?> _refreshAuthToken() async {
+    const storage = FlutterSecureStorage();
+    final refreshToken = await storage.read(key: 'refresh_token');
+    if (refreshToken == null) return null;
+
+    try {
+      final response = await _dio.post(
+        '/auth/refresh/',
+        data: {'refresh': refreshToken},
+      );
+
+      final newAccessToken = response.data['access'];
+      final newRefreshToken = response.data['refresh'];
+
+      // 새 토큰 저장
+      await storage.write(key: 'access_token', value: newAccessToken);
+      await storage.write(key: 'refresh_token', value: newRefreshToken);
+
+      return newAccessToken;
+    } catch (e) {
+      _logger.e('Failed to refresh token: $e');
+      // 토큰 갱신 실패 시 토큰 삭제
+      await storage.delete(key: 'access_token');
+      await storage.delete(key: 'refresh_token');
+      return null;
+    }
   }
 
   // GET 요청

@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -21,10 +22,22 @@ void main() async {
     await dotenv.load(fileName: '.env');
     debugPrint('✅ .env 파일 로딩 완료');
 
-    // 네이버 지도 SDK 초기화 (모바일에서만 실행)
-    // Web, Windows, macOS, Linux에서는 네이버 지도 SDK를 지원하지 않음
+    // Kakao SDK 초기화 (모바일에서만 실행)
     final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
+    if (isMobile) {
+      final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY'] ?? '';
+      if (kakaoNativeAppKey.isNotEmpty) {
+        debugPrint('🔄 Kakao SDK 초기화 시작...');
+        KakaoSdk.init(nativeAppKey: kakaoNativeAppKey);
+        debugPrint('✅ Kakao SDK 초기화 완료');
+      } else {
+        debugPrint('⚠️ 경고: KAKAO_NATIVE_APP_KEY가 .env 파일에 설정되지 않았습니다.');
+      }
+    }
+
+    // 네이버 지도 SDK 초기화 (모바일에서만 실행)
+    // Web, Windows, macOS, Linux에서는 네이버 지도 SDK를 지원하지 않음
     if (isMobile) {
       final naverMapClientId = dotenv.env['NAVER_MAP_CLIENT_ID'] ?? '';
       debugPrint('🗺️ Naver Map Client ID: ${naverMapClientId.isEmpty ? "없음" : "설정됨"}');
@@ -39,7 +52,7 @@ void main() async {
       );
       debugPrint('✅ 네이버 지도 SDK 초기화 완료');
     } else {
-      debugPrint('ℹ️ 현재 플랫폼에서는 네이버 지도가 지원되지 않습니다 (모바일 앱에서만 사용 가능)');
+      debugPrint('ℹ️ 현재 플랫폼에서는 네이버 지도와 Kakao SDK가 지원되지 않습니다 (모바일 앱에서만 사용 가능)');
     }
   } catch (e, stackTrace) {
     debugPrint('❌ 초기화 에러: $e');

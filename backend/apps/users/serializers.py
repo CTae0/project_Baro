@@ -19,9 +19,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'first_name', 'last_name',
             'phone_number', 'profile_image',
+            'oauth_provider', 'oauth_id',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'oauth_provider', 'oauth_id']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -58,3 +59,17 @@ class RegisterSerializer(serializers.ModelSerializer):
             phone_number=validated_data.get('phone_number', '')
         )
         return user
+
+
+class SocialLoginSerializer(serializers.Serializer):
+    """
+    소셜 로그인 시리얼라이저 (Kakao)
+    Frontend에서 받은 access_token을 검증
+    """
+    access_token = serializers.CharField(required=True)
+
+    def validate_access_token(self, value):
+        """Access token 검증"""
+        if not value:
+            raise serializers.ValidationError("Access token is required")
+        return value

@@ -5,3 +5,9 @@ targets:
       # custom_lint 빌더 비활성화 (analyzer_plugin 충돌 방지)
       custom_lint_builder|custom_lint_builder:
         enabled: false
+
+      # Retrofit 생성 코드에 not_enough_positional_arguments ignore 추가
+      retrofit_generator:
+        options:
+          ignore_for_file:
+            - not_enough_positional_arguments

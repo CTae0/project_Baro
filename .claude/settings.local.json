@@ -19,7 +19,9 @@
       "Bash(python manage.py makemigrations:*)",
       "Bash(flutter pub run build_runner build:*)",
       "Bash(flutter analyze:*)",
-      "Bash(flutter build:*)"
+      "Bash(flutter build:*)",
+      "Bash(dir /s /b \"d:\\\\Proejct_BARO\\\\backend\\\\*.py\")",
+      "Bash(findstr:*)"
     ]
   }
 }

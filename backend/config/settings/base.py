@@ -47,12 +47,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',  # PostGIS 지원
+    'django.contrib.sites',  # Required by allauth
 
     # Third party apps
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.kakao',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
 
     # Local apps
     'apps.users',
@@ -68,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # allauth required
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -181,7 +190,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': False,
+    'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -227,4 +236,41 @@ LOGGING = {
             'propagate': False,
         },
     },
+}
+
+# Django Sites Framework
+SITE_ID = 1
+
+# Django-allauth Configuration
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_ADAPTER = 'apps.users.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'apps.users.adapters.CustomSocialAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+# Kakao OAuth Provider
+SOCIALACCOUNT_PROVIDERS = {
+    'kakao': {
+        'APP': {
+            'client_id': config('KAKAO_REST_API_KEY', default=''),
+            'secret': config('KAKAO_CLIENT_SECRET', default=''),
+            'key': ''
+        },
+        'SCOPE': ['account_email', 'profile_nickname'],
+        'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+        'VERIFIED_EMAIL': False,
+    }
+}
+
+# dj-rest-auth Configuration
+REST_AUTH = {
+    'USE_JWT': True,
+    'JWT_AUTH_COOKIE': None,
+    'JWT_AUTH_HTTPONLY': False,
+    'USER_DETAILS_SERIALIZER': 'apps.users.serializers.UserSerializer',
+    'REGISTER_SERIALIZER': 'apps.users.serializers.RegisterSerializer',
+    'TOKEN_MODEL': None,  # JWT 사용으로 authtoken 불필요
 }
