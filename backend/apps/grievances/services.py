@@ -10,15 +10,10 @@ from django.conf import settings
 from django.core.cache import cache
 from django.contrib.gis.geos import Point
 from django.contrib.gis.db.models.functions import Distance
-from apps.grievances.models import Grievance
+from apps.grievances.models import Grievance, Area
 
 logger = logging.getLogger(__name__)
-def __init__(self):
-    self.client_id = settings.NAVER_MAP_CLIENT_ID
-    self.client_secret = settings.NAVER_MAP_CLIENT_SECRET
-    # 서버 실행 시 터미널 로그에서 확인 가능
-    print(f"DEBUG: Loaded Client ID for Backend: {self.client_id}") 
-    self.api_url = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc"
+
 
 class ReverseGeocoder:
     """
@@ -129,3 +124,50 @@ class NearbyGrievanceService:
         ).order_by('distance')
 
         return queryset
+
+
+class AreaMatcher:
+    """
+    민원 위치를 행정동(Area)에 매칭하는 서비스
+    """
+
+    @staticmethod
+    def match_area(location_name, latitude, longitude):
+        """
+        location_name (Naver 역지오코딩 결과)와 좌표를 기반으로 Area 찾기
+
+        Args:
+            location_name: "강남구", "서울 강남구" 등
+            latitude: 위도
+            longitude: 경도
+
+        Returns:
+            Area 인스턴스
+        """
+        # Strategy 1: Exact or partial name match
+        if location_name:
+            # Try exact match
+            area = Area.objects.filter(name__iexact=location_name).first()
+            if area:
+                logger.info(f"Area matched by exact name: {area.name}")
+                return area
+
+            # Try partial match (e.g., "서울 강남구" contains "강남구")
+            for area in Area.objects.exclude(name='미지정'):
+                if area.name in location_name:
+                    logger.info(f"Area matched by partial name: {area.name}")
+                    return area
+
+        # Strategy 2: Find nearest area by center_point
+        point = Point(longitude, latitude, srid=4326)
+        nearest_area = Area.objects.exclude(name='미지정').annotate(
+            distance=Distance('center_point', point)
+        ).order_by('distance').first()
+
+        if nearest_area:
+            logger.info(f"Area matched by proximity: {nearest_area.name}")
+            return nearest_area
+
+        # Strategy 3: Fallback to default
+        logger.warning(f"No area match found for {location_name} ({latitude}, {longitude}), using default")
+        return Area.objects.get(name='미지정')

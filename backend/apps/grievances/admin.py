@@ -5,7 +5,7 @@
 from django.contrib import admin
 from django.contrib.gis.admin import GISModelAdmin
 from django.utils.html import format_html
-from apps.grievances.models import Grievance, GrievanceImage, Like
+from apps.grievances.models import Grievance, GrievanceImage, Like, Area, GrievanceSecret
 
 
 class GrievanceImageInline(admin.TabularInline):
@@ -26,20 +26,46 @@ class GrievanceImageInline(admin.TabularInline):
     image_preview.short_description = '미리보기'
 
 
+@admin.register(Area)
+class AreaAdmin(GISModelAdmin):
+    """행정동 관리자 페이지"""
+    list_display = ['name', 'leader', 'grievance_count', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['name', 'leader__email', 'leader__nickname']
+    readonly_fields = ['grievance_count', 'created_at', 'updated_at']
+
+    fieldsets = (
+        ('기본 정보', {
+            'fields': ('name', 'leader')
+        }),
+        ('지리 정보', {
+            'fields': ('center_point', 'boundary')
+        }),
+        ('통계', {
+            'fields': ('grievance_count', 'created_at', 'updated_at')
+        }),
+    )
+
+    def grievance_count(self, obj):
+        """해당 지역의 민원 개수"""
+        return obj.grievances.count()
+    grievance_count.short_description = '민원 수'
+
+
 @admin.register(Grievance)
 class GrievanceAdmin(GISModelAdmin):
     """민원 관리자 페이지 (지도 위젯 포함)"""
-    list_display = ['title', 'category', 'location', 'status', 'user_email', 'like_count_display', 'created_at']
-    list_filter = ['category', 'status', 'created_at', 'location']
-    search_fields = ['title', 'content', 'location', 'user__email']
+    list_display = ['title', 'category', 'area', 'location', 'status', 'visibility', 'user_email', 'like_count_display', 'created_at', 'completed_at']
+    list_filter = ['category', 'status', 'visibility', 'area', 'created_at']
+    search_fields = ['title', 'content', 'location', 'user__email', 'area__name']
     inlines = [GrievanceImageInline]
 
     fieldsets = (
         ('기본 정보', {
-            'fields': ('user', 'category', 'title', 'content', 'status')
+            'fields': ('user', 'category', 'title', 'content', 'status', 'visibility', 'completed_at')
         }),
         ('위치', {
-            'fields': ('location', 'latitude', 'longitude', 'point')
+            'fields': ('area', 'location', 'latitude', 'longitude', 'point')
         }),
         ('메타', {
             'fields': ('like_count_display', 'created_at', 'updated_at')

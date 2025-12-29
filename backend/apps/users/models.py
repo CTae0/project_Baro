@@ -5,6 +5,7 @@
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.core.validators import MinValueValidator
 
 
 class CustomUserManager(BaseUserManager):
@@ -70,6 +71,44 @@ class CustomUser(AbstractUser):
     )
     oauth_id = models.CharField('OAuth ID', max_length=100, blank=True, null=True)
 
+    # 역할 기반 접근 제어
+    role = models.CharField(
+        '역할',
+        max_length=20,
+        choices=[
+            ('citizen', '시민'),
+            ('politician', '정치인'),
+            ('admin', '관리자'),
+        ],
+        default='citizen',
+        db_index=True
+    )
+
+    # 닉네임 (표시 이름)
+    nickname = models.CharField('닉네임', max_length=50, blank=True)
+
+    # 정치인 정보
+    party = models.CharField('소속 정당', max_length=100, blank=True, null=True)
+    is_verified = models.BooleanField('인증 여부', default=False, db_index=True)
+
+    # 평판 시스템
+    reputation = models.IntegerField(
+        '평판 점수',
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+
+    # 담당/거주 지역
+    area = models.ForeignKey(
+        'grievances.Area',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='residents',
+        verbose_name='거주/담당 지역',
+        help_text='사용자가 거주하거나 담당하는 행정동'
+    )
+
     # 타임스탬프
     created_at = models.DateTimeField('생성일', auto_now_add=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)
@@ -88,6 +127,8 @@ class CustomUser(AbstractUser):
         indexes = [
             models.Index(fields=['email']),
             models.Index(fields=['oauth_provider', 'oauth_id']),
+            models.Index(fields=['role']),
+            models.Index(fields=['is_verified']),
         ]
 
     def __str__(self):
