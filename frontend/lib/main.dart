@@ -8,7 +8,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
-
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
@@ -17,6 +16,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+
     // 환경 변수 로드 (.env 파일에서 민감 정보 읽기)
     debugPrint('🔄 .env 파일 로딩 시작...');
     await dotenv.load(fileName: '.env');
@@ -36,22 +36,50 @@ void main() async {
       }
     }
 
-    // 네이버 지도 SDK 초기화 (모바일에서만 실행)
-    // Web, Windows, macOS, Linux에서는 네이버 지도 SDK를 지원하지 않음
-    if (isMobile) {
-      final naverMapClientId = dotenv.env['NAVER_MAP_CLIENT_ID'] ?? '';
-      debugPrint('🗺️ Naver Map Client ID: ${naverMapClientId.isEmpty ? "없음" : "설정됨"}');
+      // 네이버 지도 SDK 초기화 (모바일에서만 실행)
+  if (isMobile) {
+    final naverMapClientId = dotenv.env['NAVER_MAP_CLIENT_ID'] ?? '';
+    debugPrint('🗺️ Naver Map Client ID: ${naverMapClientId.isEmpty ? "없음" : "설정됨"}');
 
-      if (naverMapClientId.isEmpty) {
-        debugPrint('⚠️ 경고: NAVER_MAP_CLIENT_ID가 .env 파일에 설정되지 않았습니다.');
-      }
+    if (naverMapClientId.isEmpty) {
+      debugPrint('⚠️ 경고: NAVER_MAP_CLIENT_ID가 .env 파일에 설정되지 않았습니다.');
+    }
 
-      debugPrint('🔄 네이버 지도 SDK 초기화 시작...');
-      await NaverMapSdk.instance.initialize(
-        clientId: naverMapClientId,
-      );
-      debugPrint('✅ 네이버 지도 SDK 초기화 완료');
-    } else {
+    debugPrint('🔄 네이버 지도 SDK 초기화 시작...');
+
+    // 최신 API (flutter_naver_map 1.4.0+): FlutterNaverMap().init 사용
+    await FlutterNaverMap().init(
+      clientId: naverMapClientId,
+      onAuthFailed: (ex) {
+        debugPrint('❌ [네이버 지도 인증 실패]');
+
+        // Sealed class pattern matching으로 예외 타입별 처리
+        switch (ex) {
+          case NQuotaExceededException(:final message):
+            debugPrint('👉 진단: 사용량 초과');
+            debugPrint(' - 상세: $message');
+            debugPrint(' - 해결: NCP 콘솔에서 사용량 확인 및 플랜 업그레이드');
+            break;
+          case NUnauthorizedClientException():
+            debugPrint('👉 진단: 인증되지 않은 클라이언트');
+            debugPrint(' - 패키지명(com.baro.baro)이 NCP 콘솔 설정과 일치하는지 확인');
+            debugPrint(' - Client ID가 올바른지 확인');
+            debugPrint(' - NCP 콘솔의 API 설정에서 [Dynamic Map]이 활성화되어 있는지 확인');
+            break;
+          case NClientUnspecifiedException():
+            debugPrint('👉 진단: 클라이언트 ID가 지정되지 않음');
+            debugPrint(' - .env 파일의 NAVER_MAP_CLIENT_ID 확인');
+            break;
+          case NAnotherAuthFailedException():
+            debugPrint('👉 진단: 기타 인증 실패');
+            debugPrint(' - 상세: $ex');
+            break;
+        }
+      },
+    );
+    
+    debugPrint('✅ 네이버 지도 SDK 초기화 시도 완료');
+  } else {
       debugPrint('ℹ️ 현재 플랫폼에서는 네이버 지도와 Kakao SDK가 지원되지 않습니다 (모바일 앱에서만 사용 가능)');
     }
   } catch (e, stackTrace) {

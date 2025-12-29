@@ -137,36 +137,49 @@ class _NaverMapWidgetState extends State<NaverMapWidget> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: NaverMap(
-          options: NaverMapViewOptions(
-            initialCameraPosition: NCameraPosition(
-              target: _currentPosition ?? const NLatLng(37.5666, 126.9784), // 기본: 서울시청
-              zoom: 15,
+        child: Stack(
+          children: [
+            NaverMap(
+              options: NaverMapViewOptions(
+                initialCameraPosition: NCameraPosition(
+                  target: _currentPosition ?? const NLatLng(37.5666, 126.9784), // 기본: 서울시청
+                  zoom: 15,
+                ),
+                indoorEnable: false,
+                // locationButtonEnable 제거됨 (v1.4.0+): 대신 NMyLocationButtonWidget 사용
+                consumeSymbolTapEvents: false,
+              ),
+              onMapReady: (controller) {
+                _mapController = controller;
+
+                // 현재 위치에 마커 추가
+                if (_currentPosition != null) {
+                  _addMarker(_currentPosition!);
+                }
+              },
+              onMapTapped: (point, latLng) {
+                // 읽기 전용 모드에서는 탭 무시
+                if (widget.readOnly) return;
+
+                // 지도 탭 시 마커 위치 변경
+                _addMarker(latLng);
+
+                // 콜백 호출
+                if (widget.onLocationSelected != null) {
+                  widget.onLocationSelected!(latLng.latitude, latLng.longitude);
+                }
+              },
             ),
-            indoorEnable: false,
-            locationButtonEnable: true,
-            consumeSymbolTapEvents: false,
-          ),
-          onMapReady: (controller) {
-            _mapController = controller;
-
-            // 현재 위치에 마커 추가
-            if (_currentPosition != null) {
-              _addMarker(_currentPosition!);
-            }
-          },
-          onMapTapped: (point, latLng) {
-            // 읽기 전용 모드에서는 탭 무시
-            if (widget.readOnly) return;
-
-            // 지도 탭 시 마커 위치 변경
-            _addMarker(latLng);
-
-            // 콜백 호출
-            if (widget.onLocationSelected != null) {
-              widget.onLocationSelected!(latLng.latitude, latLng.longitude);
-            }
-          },
+            // 내 위치 버튼 (v1.4.0+ 위젯 방식)
+            if (_mapController != null && !widget.readOnly)
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: NMyLocationButtonWidget(
+                  mapController: _mapController!,
+                ),
+              ),
+          ],
         ),
       ),
     );

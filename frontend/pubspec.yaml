@@ -49,6 +49,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   dartz: ^0.10.1  # Functional programming (Either pattern)
   equatable: ^2.0.5  # Value equality
+  package_info_plus: ^9.0.0
 
 dev_dependencies:
   flutter_test:

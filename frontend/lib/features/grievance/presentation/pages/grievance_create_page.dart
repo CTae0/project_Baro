@@ -37,7 +37,7 @@ class _GrievanceCreatePageState extends ConsumerState<GrievanceCreatePage> {
 
   // 이미지 선택 관련
   final ImagePicker _picker = ImagePicker();
-  List<XFile> _selectedImages = [];
+  final List<XFile> _selectedImages = [];
 
   // 제출 중 상태
   bool _isSubmitting = false;

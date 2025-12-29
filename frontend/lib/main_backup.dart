@@ -28,7 +28,7 @@ void main() async {
     }
 
     debugPrint('🔄 네이버 지도 SDK 초기화 시작...');
-    await NaverMapSdk.instance.initialize(
+    await FlutterNaverMap().init(
       clientId: naverMapClientId,
     );
     debugPrint('✅ 네이버 지도 SDK 초기화 완료');

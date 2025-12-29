@@ -41,10 +41,10 @@
         실제 Client ID는 Dart 코드(main.dart)에서 .env를 통해 주입됩니다.
         빈 값 또는 플레이스홀더를 유지하세요.
         -->
-        <!-- <meta-data
-            android:name="com.naver.maps.map.CLIENT_ID"
-            android:value=""/> -->
-
+<!-- 
+        <meta-data
+            android:name="com.naver.maps.map.NCP_KEY_ID"
+            android:value="3o5hj4kw26" />  -->
         <!-- Kakao SDK OAuth 인증 Activity -->
         <activity
             android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"

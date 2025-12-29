@@ -13,7 +13,12 @@ from django.contrib.gis.db.models.functions import Distance
 from apps.grievances.models import Grievance
 
 logger = logging.getLogger(__name__)
-
+def __init__(self):
+    self.client_id = settings.NAVER_MAP_CLIENT_ID
+    self.client_secret = settings.NAVER_MAP_CLIENT_SECRET
+    # 서버 실행 시 터미널 로그에서 확인 가능
+    print(f"DEBUG: Loaded Client ID for Backend: {self.client_id}") 
+    self.api_url = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc"
 
 class ReverseGeocoder:
     """
