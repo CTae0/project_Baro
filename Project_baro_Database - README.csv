@@ -1,0 +1,4 @@
+Entity,Relationship Summary
+USER,"1:N COMPLAIN (complainer_id), N:1 AREA (area_id optional)"
+AREA,"1:N COMPLAIN, N:1 USER (leader_user_id)"
+COMPLAIN,"1:N COMPLAIN_MEDIA, 1:0..1 COMPLAIN_SECRET"

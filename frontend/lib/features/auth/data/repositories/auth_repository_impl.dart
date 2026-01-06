@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/auth_tokens_entity.dart';
 import '../../domain/entities/user_entity.dart';
@@ -8,6 +9,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../datasources/kakao_service.dart';
+import '../datasources/naver_service.dart';
 
 /// AuthRepository 구현체
 /// 인증 관련 비즈니스 로직을 처리하고 데이터 소스를 조합
@@ -15,11 +17,14 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthApi remoteDataSource;
   final AuthLocalDataSource localDataSource;
   final KakaoService kakaoService;
+  final NaverService naverService;
+  final Logger _logger = Logger();
 
   AuthRepositoryImpl(
     this.remoteDataSource,
     this.localDataSource,
     this.kakaoService,
+    this.naverService,
   );
 
   @override
@@ -85,24 +90,85 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity>> loginWithKakao() async {
     try {
+      _logger.i('=== Kakao 로그인 시작 ===');
+
       // 1. Kakao SDK로 access_token 받기
+      _logger.i('Step 1: Kakao SDK 로그인 시도');
       final kakaoAccessToken = await kakaoService.login();
+      _logger.i('Kakao SDK 로그인 성공 - Token: ${kakaoAccessToken.substring(0, 20)}...');
 
       // 2. Backend에 전송하여 JWT 받기
+      _logger.i('Step 2: Backend로 토큰 전송');
       final response = await remoteDataSource.loginWithKakao({
         'access_token': kakaoAccessToken,
       });
+      _logger.i('Backend 응답 수신 - User ID: ${response.user.id}');
 
       // 3. JWT 토큰 저장
+      _logger.i('Step 3: JWT 토큰 저장');
       await localDataSource.saveAccessToken(response.tokens.access);
       await localDataSource.saveRefreshToken(response.tokens.refresh);
+      _logger.i('JWT 토큰 저장 완료');
 
+      // 저장 완료 대기 (타이밍 이슈 방지)
+      await Future.delayed(const Duration(milliseconds: 100));
+      _logger.d('토큰 저장 대기 완료');
+
+      _logger.i('=== Kakao 로그인 성공 ===');
       return Right(response.user.toEntity());
-    } on SocketException {
+    } on SocketException catch (e) {
+      _logger.e('네트워크 오류: $e');
       return const Left(NetworkFailure());
     } on DioException catch (e) {
+      _logger.e('Dio 오류: ${e.response?.statusCode} - ${e.message}');
+      _logger.e('응답 데이터: ${e.response?.data}');
       return Left(_handleDioError(e));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _logger.e('알 수 없는 오류: $e');
+      _logger.e('StackTrace: $stackTrace');
+      return Left(UnknownFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> loginWithNaver() async {
+    try {
+      _logger.i('=== Naver 로그인 시작 ===');
+
+      // 1. Naver SDK로 access_token 받기
+      _logger.i('Step 1: Naver SDK 로그인 시도');
+      final naverAccessToken = await naverService.login();
+      _logger.i('Naver SDK 로그인 성공 - Token: ${naverAccessToken.substring(0, 20)}...');
+
+      // 2. Backend에 전송하여 JWT 받기
+      _logger.i('Step 2: Backend로 토큰 전송');
+      final response = await remoteDataSource.loginWithNaver({
+        'access_token': naverAccessToken,
+      });
+      _logger.i('Backend 응답 수신 - User ID: ${response.user.id}');
+
+      // 3. JWT 토큰 저장
+      _logger.i('Step 3: JWT 토큰 저장');
+      await localDataSource.saveAccessToken(response.tokens.access);
+      await localDataSource.saveRefreshToken(response.tokens.refresh);
+      _logger.i('JWT 토큰 저장 완료');
+
+      // 저장 완료 대기 (타이밍 이슈 방지)
+      await Future.delayed(const Duration(milliseconds: 100));
+      _logger.d('토큰 저장 대기 완료');
+
+      _logger.i('=== Naver 로그인 성공 ===');
+      return Right(response.user.toEntity());
+    } on SocketException catch (e) {
+      _logger.e('네트워크 오류: $e');
+      return const Left(NetworkFailure());
+    } on DioException catch (e) {
+      _logger.e('Dio 오류: ${e.response?.statusCode} - ${e.message}');
+      _logger.e('응답 데이터: ${e.response?.data}');
+      return Left(_handleDioError(e));
+    } catch (e, stackTrace) {
+      _logger.e('알 수 없는 오류: $e');
+      _logger.e('StackTrace: $stackTrace');
       return Left(UnknownFailure(e.toString()));
     }
   }
@@ -116,11 +182,17 @@ class AuthRepositoryImpl implements AuthRepository {
         await remoteDataSource.logout({'refresh': refreshToken});
       }
 
-      // Kakao 로그아웃도 시도 (실패해도 무시)
+      // 소셜 로그인 로그아웃 시도 (실패해도 무시)
       try {
         await kakaoService.logout();
       } catch (e) {
         // Kakao 로그아웃 실패는 무시
+      }
+
+      try {
+        await naverService.logout();
+      } catch (e) {
+        // Naver 로그아웃 실패는 무시
       }
 
       // 로컬 토큰 삭제

@@ -1,0 +1,12 @@
+column_name,data_type (PostgreSQL),constraints,description
+complain_id,BIGSERIAL,PRIMARY KEY,민원 ID
+complainer_id,BIGINT,NOT NULL; FOREIGN KEY → USER(user_id),민원 제기자
+area_id,BIGINT,NOT NULL; FOREIGN KEY → AREA(area_id),민원 발생 행정동
+title,VARCHAR(200),NOT NULL,민원 제목
+content,TEXT,NOT NULL,민원 내용
+status,VARCHAR(20),"NOT NULL; DEFAULT 'Pending'; CHECK(status IN ('Pending','Processing','Completed','Rejected'))",처리 상태
+category,VARCHAR(50),NOT NULL; DEFAULT 'etc',민원 유형(값 목록을 CHECK/참조테이블로 고정 권장)
+visibility,VARCHAR(20),"NOT NULL; DEFAULT 'public'; CHECK(visibility IN ('public','private'))",공개 범위(간소화: public/private)
+location,"geometry(Point, 4326)",NOT NULL,민원 위치 좌표
+created_at,TIMESTAMPTZ,NOT NULL; DEFAULT now(),생성 시각
+completed_at,TIMESTAMPTZ,NULL; CHECK(completed_at IS NULL OR completed_at >= created_at),완료 시각

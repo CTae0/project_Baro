@@ -8,6 +8,7 @@ from apps.users.views import (
     RegisterView,
     CurrentUserView,
     KakaoLoginView,
+    NaverLoginView,
     LogoutView
 )
 
@@ -19,6 +20,7 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/me/', CurrentUserView.as_view(), name='current_user'),
 
-    # Kakao OAuth
+    # 소셜 로그인
     path('auth/kakao/', KakaoLoginView.as_view(), name='kakao_login'),
+    path('auth/naver/', NaverLoginView.as_view(), name='naver_login'),
 ]

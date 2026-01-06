@@ -22,6 +22,10 @@ abstract class AuthApi {
   @POST('/auth/kakao/')
   Future<AuthResponseModel> loginWithKakao(@Body() Map<String, dynamic> data);
 
+  /// Naver OAuth 로그인
+  @POST('/auth/naver/')
+  Future<AuthResponseModel> loginWithNaver(@Body() Map<String, dynamic> data);
+
   /// 로그아웃
   @POST('/auth/logout/')
   Future<void> logout(@Body() Map<String, dynamic> data);

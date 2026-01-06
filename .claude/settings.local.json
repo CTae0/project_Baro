@@ -21,7 +21,11 @@
       "Bash(flutter analyze:*)",
       "Bash(flutter build:*)",
       "Bash(dir /s /b \"d:\\\\Proejct_BARO\\\\backend\\\\*.py\")",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(python manage.py shell:*)",
+      "Bash(python manage.py runserver:*)",
+      "Bash(python manage.py check:*)",
+      "Bash(curl:*)"
     ]
   }
 }

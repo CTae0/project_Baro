@@ -478,15 +478,30 @@ python manage.py runserver
 - ✅ Backend 이미지 저장 (GrievanceImage 모델)
 - ✅ 민원 상세 페이지 이미지 갤러리 (PageView)
 
-### Phase 2.5: 인증 시스템 (2025년 2월 - 진행 예정)
+### Phase 2.5: 인증 시스템 (2025년 1월 - 진행 중)
+
+#### ✅ 완료된 작업 (Phase 1: Kakao OAuth 준비)
+- ✅ Backend: KakaoLoginView 구현 (`/api/auth/kakao/`)
+- ✅ Backend: JWT 토큰 발급 시스템 구축
+- ✅ Backend: 상세 로깅 추가 (디버깅용)
+- ✅ Frontend: Kakao SDK 초기화 (모바일 + 웹 지원)
+- ✅ Frontend: KakaoService 구현 (로그인/로그아웃)
+- ✅ Frontend: AuthRepository 로그인 플로우 구현
+- ✅ Frontend: Dio JWT Interceptor 구현 (자동 토큰 주입 + 갱신)
+- ✅ Frontend: Flutter Secure Storage 토큰 저장
+- ✅ CORS 설정 업데이트 (웹/모바일 지원)
+- ⚠️ **Kakao 로그인 통합 테스트 미완료** (JavaScript Key 설정 필요)
+
+#### 📋 진행 중 (Phase 2: Naver OAuth)
+- 🔲 Backend: NaverLoginView 구현
+- 🔲 Frontend: Naver SDK 통합
+- 🔲 Frontend: Naver 로그인 UI 추가
 
 #### 📋 예정된 작업
-- 🔲 Kakao OAuth 소셜 로그인
-- 🔲 Naver OAuth 소셜 로그인
-- 🔲 JWT 토큰 Interceptor 연결
-- 🔲 Flutter Secure Storage 토큰 저장
-- 🔲 사용자 프로필 관리
+- 🔲 사용자 프로필 페이지 구현
+- 🔲 로그아웃 기능 완성
 - 🔲 Permission Classes 활성화 (현재 테스트용으로 비활성화)
+- 🔲 Pagination 활성화
 
 ### Phase 3: 고급 기능 (2025년 3월)
 📅 **계획 중**

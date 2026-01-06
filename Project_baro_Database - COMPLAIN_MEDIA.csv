@@ -1,0 +1,5 @@
+column_name,data_type (PostgreSQL),constraints,description
+media_id,BIGSERIAL,PRIMARY KEY,미디어 ID
+complain_id,BIGINT,NOT NULL; FOREIGN KEY → COMPLAIN(complain_id) ON DELETE CASCADE,민원 ID
+image_url,TEXT,NOT NULL,이미지 URL/경로
+(index),,"UNIQUE(complain_id, image_url) [권장]",동일 민원 내 중복 URL 방지

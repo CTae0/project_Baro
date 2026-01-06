@@ -81,10 +81,14 @@ class DioClient {
         // JWT 토큰 자동 주입
         final token = await _getAuthToken();
         if (token != null) {
+          _logger.d('토큰 추가: Bearer ${token.substring(0, 20)}...');
           options.headers['Authorization'] = 'Bearer $token';
+        } else {
+          _logger.w('저장된 토큰 없음');
         }
 
         _logger.d('REQUEST[${options.method}] => PATH: ${options.path}');
+        _logger.d('Headers: ${options.headers}');
         return handler.next(options);
       },
       onResponse: (response, handler) {
@@ -98,12 +102,15 @@ class DioClient {
           'ERROR[${error.response?.statusCode}] => PATH: ${error.requestOptions.path}',
         );
         _logger.e('ERROR MESSAGE: ${error.message}');
+        _logger.e('ERROR DATA: ${error.response?.data}');
 
         // 401 Unauthorized 처리 - 토큰 갱신 시도
         if (error.response?.statusCode == 401) {
+          _logger.w('401 Unauthorized - 토큰 갱신 시도');
           try {
             final newToken = await _refreshAuthToken();
             if (newToken != null) {
+              _logger.i('토큰 갱신 성공 - 원래 요청 재시도');
               // 토큰 갱신 성공 - 원래 요청 재시도
               error.requestOptions.headers['Authorization'] = 'Bearer $newToken';
               final cloneReq = await _dio.request(
@@ -116,6 +123,8 @@ class DioClient {
                 queryParameters: error.requestOptions.queryParameters,
               );
               return handler.resolve(cloneReq);
+            } else {
+              _logger.e('토큰 갱신 실패 - 새 토큰 없음');
             }
           } catch (e) {
             _logger.e('Token refresh failed: $e');

@@ -22,21 +22,35 @@ void main() async {
     await dotenv.load(fileName: '.env');
     debugPrint('✅ .env 파일 로딩 완료');
 
-    // Kakao SDK 초기화 (모바일에서만 실행)
-    final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    // Kakao SDK 초기화 (모바일 및 웹 모두 지원)
+    final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY'] ?? '';
+    final kakaoJavaScriptKey = dotenv.env['KAKAO_JAVASCRIPT_KEY'] ?? '';
 
-    if (isMobile) {
-      final kakaoNativeAppKey = dotenv.env['KAKAO_NATIVE_APP_KEY'] ?? '';
+    if (kIsWeb) {
+      // 웹 환경: JavaScript Key 사용
+      if (kakaoJavaScriptKey.isNotEmpty) {
+        debugPrint('🔄 Kakao SDK 초기화 시작 (웹)...');
+        KakaoSdk.init(
+          nativeAppKey: kakaoNativeAppKey,  // 웹에서도 필요
+          javaScriptAppKey: kakaoJavaScriptKey,
+        );
+        debugPrint('✅ Kakao SDK 초기화 완료 (웹)');
+      } else {
+        debugPrint('⚠️ 경고: KAKAO_JAVASCRIPT_KEY가 .env 파일에 설정되지 않았습니다.');
+      }
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      // 모바일 환경: Native Key 사용
       if (kakaoNativeAppKey.isNotEmpty) {
-        debugPrint('🔄 Kakao SDK 초기화 시작...');
+        debugPrint('🔄 Kakao SDK 초기화 시작 (모바일)...');
         KakaoSdk.init(nativeAppKey: kakaoNativeAppKey);
-        debugPrint('✅ Kakao SDK 초기화 완료');
+        debugPrint('✅ Kakao SDK 초기화 완료 (모바일)');
       } else {
         debugPrint('⚠️ 경고: KAKAO_NATIVE_APP_KEY가 .env 파일에 설정되지 않았습니다.');
       }
     }
 
       // 네이버 지도 SDK 초기화 (모바일에서만 실행)
+    final isMobile = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   if (isMobile) {
     final naverMapClientId = dotenv.env['NAVER_MAP_CLIENT_ID'] ?? '';
     debugPrint('🗺️ Naver Map Client ID: ${naverMapClientId.isEmpty ? "없음" : "설정됨"}');

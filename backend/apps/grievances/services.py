@@ -24,7 +24,8 @@ class ReverseGeocoder:
     def __init__(self):
         self.client_id = settings.NAVER_MAP_CLIENT_ID
         self.client_secret = settings.NAVER_MAP_CLIENT_SECRET
-        self.api_url = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc"
+        # 최신 API 엔드포인트 (2025)
+        self.api_url = "https://maps.apigw.ntruss.com/map-reversegeocode/v2/gc"
 
     def get_location_name(self, latitude, longitude):
         """

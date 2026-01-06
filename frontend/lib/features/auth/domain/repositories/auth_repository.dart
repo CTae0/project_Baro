@@ -25,6 +25,9 @@ abstract class AuthRepository {
   /// Kakao OAuth 로그인
   Future<Either<Failure, UserEntity>> loginWithKakao();
 
+  /// Naver OAuth 로그인
+  Future<Either<Failure, UserEntity>> loginWithNaver();
+
   /// 로그아웃 (토큰 블랙리스트)
   Future<Either<Failure, void>> logout();
 

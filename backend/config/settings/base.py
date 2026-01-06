@@ -199,11 +199,23 @@ SIMPLE_JWT = {
 }
 
 # CORS 설정
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL', default=False, cast=bool)
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL', default=True, cast=bool)  # 개발용
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://localhost:8080'
+    default='http://localhost:3000,http://localhost:8080,http://10.0.2.2:8000,http://localhost:8000'
 ).split(',')
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Naver Map API 설정 (역지오코딩)
 NAVER_MAP_CLIENT_ID = config('NAVER_MAP_CLIENT_ID', default='')

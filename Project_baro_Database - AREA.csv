@@ -1,0 +1,6 @@
+column_name,data_type (PostgreSQL),constraints,description
+area_id,BIGINT,PRIMARY KEY,행정동 코드/ID
+name,VARCHAR(100),NOT NULL,행정동 이름
+center_point,"geometry(Point, 4326)",NOT NULL,행정동 대표점(지도 표시/근접 검색용)
+leader_user_id,BIGINT,NOT NULL; FOREIGN KEY → USER(user_id),해당 구역 최고 담당자(1명)
+boundary,"geometry(MultiPolygon, 4326)",NULL,경계(선택). 필요 시 '민원 위치→구역 자동판정'에 사용

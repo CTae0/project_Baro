@@ -12,17 +12,35 @@ class KakaoService {
   Future<String> login() async {
     try {
       bool isInstalled = await isKakaoTalkInstalled();
+      _logger.i('카카오톡 설치 여부: $isInstalled');
 
       OAuthToken token;
       if (isInstalled) {
         _logger.i('카카오톡으로 로그인 시도');
-        token = await UserApi.instance.loginWithKakaoTalk();
+        try {
+          token = await UserApi.instance.loginWithKakaoTalk();
+        } on Exception catch (e) {
+          // 카카오톡 로그인 실패 시 웹 로그인으로 폴백
+          _logger.w('카카오톡 로그인 실패, 웹 로그인 시도: $e');
+          token = await UserApi.instance.loginWithKakaoAccount();
+        }
       } else {
         _logger.i('카카오 계정으로 로그인 시도');
         token = await UserApi.instance.loginWithKakaoAccount();
       }
 
       _logger.i('Kakao 로그인 성공');
+      _logger.d('Access Token: ${token.accessToken.substring(0, 20)}...');
+      _logger.d('Refresh Token available: ${token.refreshToken != null}');
+
+      // 토큰 유효성 검증 (옵션)
+      try {
+        final tokenInfo = await UserApi.instance.accessTokenInfo();
+        _logger.i('토큰 유효 - 남은 시간: ${tokenInfo.expiresIn}초');
+      } catch (e) {
+        _logger.w('토큰 검증 실패 (계속 진행): $e');
+      }
+
       return token.accessToken;
     } catch (e) {
       _logger.e('Kakao 로그인 실패: $e');
