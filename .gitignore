@@ -17,6 +17,10 @@ Thumbs.db
 NUL
 .dart_tool/
 
+# Database files
+Project_baro_Database.xlsx
+Project_baro_Database*.csv
+
 # Note: Frontend and Backend have their own .gitignore files
 # - frontend/.gitignore - Flutter/Dart specific settings
 # - backend/.gitignore - Django/Python specific settings

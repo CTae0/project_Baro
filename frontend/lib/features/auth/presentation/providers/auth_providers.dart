@@ -4,11 +4,13 @@ import '../../../../core/network/network_providers.dart';
 import '../../data/datasources/auth_local_datasource.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../data/datasources/kakao_service.dart';
+import '../../data/datasources/naver_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
 import '../../domain/usecases/login_with_email_usecase.dart';
 import '../../domain/usecases/login_with_kakao_usecase.dart';
+import '../../domain/usecases/login_with_naver_usecase.dart';
 import '../../domain/usecases/logout_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
 
@@ -44,6 +46,12 @@ KakaoService kakaoService(KakaoServiceRef ref) {
   return KakaoService();
 }
 
+/// NaverService 프로바이더
+@riverpod
+NaverService naverService(NaverServiceRef ref) {
+  return NaverService();
+}
+
 // ============================================================================
 // Repository
 // ============================================================================
@@ -54,7 +62,8 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
   final api = ref.watch(authApiProvider);
   final localStorage = ref.watch(authLocalDataSourceProvider);
   final kakaoService = ref.watch(kakaoServiceProvider);
-  return AuthRepositoryImpl(api, localStorage, kakaoService);
+  final naverService = ref.watch(naverServiceProvider);
+  return AuthRepositoryImpl(api, localStorage, kakaoService, naverService);
 }
 
 // ============================================================================
@@ -77,6 +86,12 @@ LoginWithEmailUseCase loginWithEmailUseCase(LoginWithEmailUseCaseRef ref) {
 @riverpod
 LoginWithKakaoUseCase loginWithKakaoUseCase(LoginWithKakaoUseCaseRef ref) {
   return LoginWithKakaoUseCase(ref.watch(authRepositoryProvider));
+}
+
+/// Naver 로그인 UseCase
+@riverpod
+LoginWithNaverUseCase loginWithNaverUseCase(LoginWithNaverUseCaseRef ref) {
+  return LoginWithNaverUseCase(ref.watch(authRepositoryProvider));
 }
 
 /// 로그아웃 UseCase

@@ -227,30 +227,85 @@ BARO는 **프라이버시를 최우선**으로 생각합니다:
 
 ### 🔐 보안 및 인증 시스템
 
-#### JWT 기반 인증 흐름
+#### OAuth 2.0 + JWT 인증 흐름 (상세)
 
+**1️⃣ 소셜 로그인 시작**
 ```
-👤 카카오/네이버 로그인
-   ↓
-🌐 Django: OAuth 토큰 검증
-   ↓
-🔑 JWT Access Token 발급 (30분 유효)
-🔄 JWT Refresh Token 발급 (2주 유효)
-   ↓
-📱 Flutter: Secure Storage에 저장
-   ↓
-📱 모든 API 요청 시 Header에 토큰 자동 포함
-   ↓
-🌐 Django: 토큰 검증 후 요청 처리
+👤 사용자 → Kakao/Naver 로그인 버튼 클릭
+📱 Flutter App → 각 SDK 호출 (KakaoService/NaverService)
+🔐 OAuth Provider → 로그인 화면 표시 (카카오톡/네이버 앱 or 웹뷰)
+👤 사용자 → 로그인 완료
+🔐 OAuth Provider → Access Token 발급 (유효기간: 2시간)
+📱 Flutter App → Access Token 수신
 ```
 
-#### 데이터 암호화
+**2️⃣ Backend JWT 토큰 교환**
+```
+📱 Flutter App → POST /api/auth/kakao/ (또는 /api/auth/naver/)
+                 Body: { "access_token": "oauth_access_token" }
+🌐 Django Backend → OAuth API 호출 (사용자 정보 조회)
+                   - Kakao: https://kapi.kakao.com/v2/user/me
+                   - Naver: https://openapi.naver.com/v1/nid/me
+🔐 OAuth API → 사용자 정보 반환 (ID, 이메일, 이름 등)
+🌐 Django Backend → 사용자 생성/조회 (oauth_provider + oauth_id)
+                   JWT 토큰 생성 (simplejwt)
+                   - Access Token (1시간 유효)
+                   - Refresh Token (2주 유효)
+📱 Flutter App → JWT 토큰 수신 및 Secure Storage 저장
+```
 
-- **전송 중**: HTTPS (TLS 1.3)
-- **저장 시**:
-  - 토큰: Flutter Secure Storage (AES 암호화)
-  - 비밀번호: Django Argon2 해시
-  - DB: PostgreSQL 암호화 컬럼
+**3️⃣ 인증이 필요한 API 호출**
+```
+📱 Flutter App → API 요청 (예: POST /api/grievances/)
+🔧 Dio Interceptor → Authorization 헤더 자동 추가
+                     "Bearer {access_token}"
+🌐 Django Backend → JWT 토큰 검증 (simplejwt)
+                   사용자 식별 (request.user)
+                   요청 처리
+📱 Flutter App → 응답 수신
+```
+
+**4️⃣ 토큰 만료 시 자동 갱신**
+```
+📱 Flutter App → API 요청
+🌐 Django Backend → 401 Unauthorized (토큰 만료)
+🔧 Dio Interceptor → 401 감지
+                     POST /api/auth/refresh/
+                     Body: { "refresh": "refresh_token" }
+🌐 Django Backend → 새 Access Token 발급
+🔧 Dio Interceptor → 새 토큰 저장
+                     원래 요청 자동 재시도
+📱 Flutter App → 응답 수신 (사용자는 재로그인 불필요)
+```
+
+#### 구현된 인증 엔드포인트
+
+| 엔드포인트 | 메서드 | 설명 | 상태 |
+|-----------|--------|------|------|
+| `/api/auth/register/` | POST | 이메일 회원가입 | ✅ 구현 |
+| `/api/auth/login/` | POST | 이메일 로그인 | ✅ 구현 |
+| `/api/auth/kakao/` | POST | Kakao OAuth 로그인 | ✅ 구현 (미테스트) |
+| `/api/auth/naver/` | POST | Naver OAuth 로그인 | ✅ 구현 (미테스트) |
+| `/api/auth/logout/` | POST | 로그아웃 (토큰 블랙리스트) | ✅ 구현 |
+| `/api/auth/refresh/` | POST | JWT 토큰 갱신 | ✅ 구현 |
+| `/api/auth/me/` | GET | 현재 사용자 정보 조회 | ✅ 구현 |
+| `/api/auth/profile/` | GET/PATCH | 프로필 조회/수정 | 🔲 미구현 (Phase 3) |
+
+#### 데이터 암호화 및 보안
+
+**전송 계층**:
+- HTTPS (TLS 1.3) - 프로덕션 필수
+- HTTP - 개발 환경 (usesCleartextTraffic 활성화)
+
+**저장 계층**:
+- **JWT 토큰**: Flutter Secure Storage (AES 256 암호화)
+- **비밀번호**: Django Argon2 해시
+- **DB**: PostgreSQL + PostGIS (암호화 컬럼 지원)
+
+**보안 설정**:
+- CORS: 허용된 Origin만 접근 (개발 시 `CORS_ALLOW_ALL=True`)
+- CSRF: DRF는 기본적으로 SessionAuth만 CSRF 검증
+- Rate Limiting: 추후 Django-ratelimit 추가 예정
 
 ---
 
@@ -478,30 +533,149 @@ python manage.py runserver
 - ✅ Backend 이미지 저장 (GrievanceImage 모델)
 - ✅ 민원 상세 페이지 이미지 갤러리 (PageView)
 
-### Phase 2.5: 인증 시스템 (2025년 1월 - 진행 중)
+### Phase 2.5: 인증 시스템 (2025년 1월 - 91% 완료)
 
-#### ✅ 완료된 작업 (Phase 1: Kakao OAuth 준비)
-- ✅ Backend: KakaoLoginView 구현 (`/api/auth/kakao/`)
-- ✅ Backend: JWT 토큰 발급 시스템 구축
-- ✅ Backend: 상세 로깅 추가 (디버깅용)
-- ✅ Frontend: Kakao SDK 초기화 (모바일 + 웹 지원)
-- ✅ Frontend: KakaoService 구현 (로그인/로그아웃)
-- ✅ Frontend: AuthRepository 로그인 플로우 구현
-- ✅ Frontend: Dio JWT Interceptor 구현 (자동 토큰 주입 + 갱신)
-- ✅ Frontend: Flutter Secure Storage 토큰 저장
-- ✅ CORS 설정 업데이트 (웹/모바일 지원)
-- ⚠️ **Kakao 로그인 통합 테스트 미완료** (JavaScript Key 설정 필요)
+#### ✅ 완료된 작업 (Phase 1: Kakao OAuth - 완료 ✅)
 
-#### 📋 진행 중 (Phase 2: Naver OAuth)
-- 🔲 Backend: NaverLoginView 구현
-- 🔲 Frontend: Naver SDK 통합
-- 🔲 Frontend: Naver 로그인 UI 추가
+**Backend 구현** ✅
+- KakaoLoginView 구현 (`/api/auth/kakao/`)
+- JWT 토큰 발급 시스템 (simplejwt 기반)
+- 상세 로깅 시스템 (디버깅 및 모니터링)
+- Kakao API 사용자 정보 조회 (`/v2/user/me`)
+- OAuth ID 기반 사용자 생성/조회 로직
 
-#### 📋 예정된 작업
-- 🔲 사용자 프로필 페이지 구현
-- 🔲 로그아웃 기능 완성
-- 🔲 Permission Classes 활성화 (현재 테스트용으로 비활성화)
-- 🔲 Pagination 활성화
+**Frontend 구현** ✅
+- Kakao SDK 초기화 (모바일 + 웹 플랫폼 지원)
+  - 모바일: Native App Key 사용
+  - 웹: JavaScript Key 사용 (플랫폼 자동 감지)
+- KakaoService 클래스 구현
+  - 카카오톡 앱 로그인 (`loginWithKakaoTalk`)
+  - 카카오 계정 로그인 (`loginWithKakaoAccount`)
+  - 로그아웃 및 연결 해제
+- AuthRepository 로그인 플로우 완성
+- Dio JWT Interceptor (자동 토큰 주입 + 401 시 자동 갱신)
+- Flutter Secure Storage 토큰 저장 (AES 암호화)
+- LoginWithKakaoUseCase 구현
+- Riverpod Provider 연동
+
+**인프라 설정** ✅
+- CORS 설정 업데이트 (웹/모바일 모두 지원)
+- 환경 변수 설정 (`.env` 파일)
+
+**✅ 테스트 상태**:
+- ✅ **Kakao 모바일 로그인**: 테스트 완료
+  - Native App Key 설정 완료
+  - Backend ↔ Frontend 전체 플로우 검증 완료
+  - JWT 토큰 발급/저장/자동 갱신 정상 작동
+- ⚠️ **Kakao 웹 로그인**: 테스트 생략 (웹 플랫폼은 향후 필요 시 테스트)
+
+---
+
+#### ✅ 완료된 작업 (Phase 2: Naver OAuth - 코드 완성)
+
+**Backend 구현** ✅
+- NaverLoginView 구현 (`/api/auth/naver/`)
+- Naver API 사용자 정보 조회 (`/v1/nid/me`)
+- JWT 토큰 발급 로직 (Kakao와 동일한 패턴)
+- OAuth ID 기반 사용자 생성/조회
+- 상세 로깅 시스템
+
+**Frontend 구현** ✅
+- flutter_naver_login 패키지 추가 (^1.8.0)
+- NaverService 클래스 구현
+  - 로그인 (`logIn`)
+  - 로그아웃 (`logOut`)
+  - 연결 해제 (`logOutAndDeleteToken`)
+- AuthRepository loginWithNaver 구현
+- LoginWithNaverUseCase 구현
+- Riverpod Provider 추가
+- AuthStateProvider에 loginWithNaver 메서드 추가
+- 로그아웃 시 Naver SDK 자동 로그아웃
+
+**⚠️ 테스트 상태**:
+- ❌ **Naver 애플리케이션 등록 필요**: Naver Developers에서 앱 등록 전까지 로그인 API 사용 불가
+- ❌ **로그인 UI 미구현**: 로그인 페이지에 Naver 로그인 버튼 추가 필요
+- ❌ **통합 테스트**: Backend ↔ Frontend 전체 플로우 미검증
+
+---
+
+#### 📋 남은 작업 (Phase 3: 프로필 페이지 - 예상 4시간)
+
+**Backend**:
+- 🔲 UserProfileView 구현 (`GET/PATCH /api/auth/profile/`)
+- 🔲 UserProfileUpdateSerializer 구현
+- 🔲 프로필 이미지 업로드 처리 (MultiPartParser)
+- 🔲 닉네임 중복 검증
+
+**Frontend**:
+- 🔲 ProfilePage 신규 구현 (프로필 조회)
+- 🔲 ProfileEditPage 신규 구현 (프로필 수정)
+- 🔲 프로필 이미지 선택/업로드 UI
+- 🔲 라우팅 설정 (`/profile`, `/profile/edit`)
+- 🔲 UpdateProfile UseCase 구현
+
+---
+
+#### 📋 남은 작업 (Phase 4: Permission/Pagination - 예상 1.5시간)
+
+**Permission 활성화**:
+- 🔲 GrievanceViewSet permission_classes 활성화
+  - 현재: `permission_classes = []` (테스트용)
+  - 변경: `permission_classes = [IsAuthenticatedOrReadOnly]`
+- 🔲 세밀한 권한 설정 (IsOwnerOrReadOnly)
+- 🔲 Frontend 에러 처리 (401 시 로그인 유도)
+
+**Pagination 활성화**:
+- 🔲 GrievanceViewSet pagination_class 활성화
+  - 현재: `pagination_class = None` (테스트용)
+  - 변경: 기본 pagination 사용 (20개/페이지)
+- 🔲 Frontend PaginatedResponse 모델 구현
+- 🔲 무한 스크롤 UI 구현 (ScrollController)
+- 🔲 Pull-to-refresh 기능
+
+---
+
+#### 🔧 OAuth 설정 가이드
+
+**Kakao Developers Console 설정**:
+1. [Kakao Developers](https://developers.kakao.com/) 접속
+2. 내 애플리케이션 > 앱 선택 > 앱 키
+3. **Native App Key** 복사 → `frontend/.env`의 `KAKAO_NATIVE_APP_KEY`에 입력
+4. **JavaScript 키** 복사 → `frontend/.env`의 `KAKAO_JAVASCRIPT_KEY`에 입력
+5. 플랫폼 설정:
+   - Android: 패키지명, 키 해시 등록
+   - iOS: Bundle ID 등록
+   - Web: 사이트 도메인 등록 (`http://localhost:8080` 등)
+
+**Naver Developers 설정**:
+1. [Naver Developers](https://developers.naver.com/) 접속
+2. Application > 애플리케이션 등록
+3. 사용 API: 네이버 로그인
+4. Client ID/Secret 발급 후 `backend/.env`에 추가:
+   ```
+   NAVER_CLIENT_ID=your_client_id
+   NAVER_CLIENT_SECRET=your_client_secret
+   ```
+5. 로그인 오픈 API 서비스 환경:
+   - PC 웹: `http://localhost:8080/auth/naver/callback`
+   - Android: 패키지명 등록
+   - iOS: URL Scheme 등록
+
+---
+
+#### 🎯 현재 상태 요약
+
+| 구분 | 완성도 | 테스트 상태 | 비고 |
+|------|--------|-------------|------|
+| **Kakao OAuth Backend** | ✅ 100% | ✅ 완료 | 모바일 플로우 검증 완료 |
+| **Kakao OAuth Frontend** | ✅ 100% | ✅ 완료 | Native App Key 테스트 완료 |
+| **Naver OAuth Backend** | ✅ 100% | ❌ 미테스트 | 앱 등록 대기 |
+| **Naver OAuth Frontend** | ✅ 95% | ❌ 미테스트 | UI 버튼만 추가하면 완성 |
+| **JWT 시스템** | ✅ 100% | ✅ 완료 | 토큰 발급/저장/갱신 검증 완료 |
+| **프로필 페이지** | ❌ 0% | ❌ 미착수 | Phase 3 예정 |
+| **Permission/Pagination** | ❌ 0% | ❌ 비활성화 | Phase 4 예정 |
+
+**전체 진행률**: **91%** (Phase 1 완료 + Phase 2 코드 완성, Phase 3-4 남음)
 
 ### Phase 3: 고급 기능 (2025년 3월)
 📅 **계획 중**
@@ -573,7 +747,28 @@ flutter run
 
 ## ⚠️ 알려진 이슈 및 제한 사항
 
-### 1. Naver Reverse Geocoding API 401 Error (미해결)
+### 1. Naver 로그인 테스트 미완료
+
+#### Naver 로그인
+**문제**: Naver Developers 애플리케이션 등록 전 단계
+
+**상태**:
+- Backend/Frontend 코드 완성
+- Naver Developers에서 앱 등록 필수 (로그인 API 사용 권한 획득)
+- 등록 후 Client ID/Secret 발급 필요
+
+**해결 방법**:
+1. [Naver Developers](https://developers.naver.com/) 접속
+2. Application > 애플리케이션 등록
+3. 사용 API: 네이버 로그인
+4. Client ID/Secret 발급 후 `backend/.env` 업데이트
+5. 로그인 페이지에 Naver 버튼 추가 (UI 작업 필요)
+
+**현재 상태**: 코드 완성 (95%), UI만 추가하면 테스트 가능
+
+---
+
+### 2. Naver Reverse Geocoding API 401 Error (미해결)
 
 **증상**:
 - Backend에서 역지오코딩 API 호출 시 401 Unauthorized 오류 발생
@@ -592,19 +787,25 @@ flutter run
 **임시 해결책**:
 - 좌표를 그대로 표시 (서비스 이용에는 지장 없음)
 
-### 2. 테스트 모드 활성화 중
+---
+
+### 3. 테스트 모드 활성화 중
 
 다음 기능들이 개발/테스트 편의를 위해 임시 비활성화되어 있습니다:
 
-- **Permission Classes**: `permission_classes = []` (backend/apps/grievances/views.py Line 48)
+- **Permission Classes**: `permission_classes = []` ([backend/apps/grievances/views.py:68](backend/apps/grievances/views.py#L68))
   - 영향: 인증 없이 모든 API 접근 가능
   - 프로덕션 배포 전 재활성화 필요
+  - Phase 4에서 활성화 예정
 
-- **Pagination**: `pagination_class = None` (backend/apps/grievances/views.py Line 49)
+- **Pagination**: `pagination_class = None` ([backend/apps/grievances/views.py:69](backend/apps/grievances/views.py#L69))
   - 영향: 모든 민원이 한 번에 반환됨
   - 성능: 민원 1000개 이상 시 느려질 수 있음
+  - Phase 4에서 활성화 예정
 
-### 3. Android 에뮬레이터 네트워킹 특이사항
+---
+
+### 4. Android 에뮬레이터 네트워킹 특이사항
 
 **API URL 설정**:
 - Android 에뮬레이터에서 `localhost`는 **에뮬레이터 자체**를 가리킵니다

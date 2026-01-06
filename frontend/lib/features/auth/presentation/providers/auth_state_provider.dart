@@ -84,6 +84,19 @@ class AuthState extends _$AuthState {
     );
   }
 
+  /// Naver로 로그인
+  Future<void> loginWithNaver() async {
+    state = const AsyncLoading();
+
+    final usecase = ref.read(loginWithNaverUseCaseProvider);
+    final result = await usecase.call();
+
+    result.fold(
+      (failure) => state = AsyncError(failure, StackTrace.current),
+      (user) => state = AsyncData(user),
+    );
+  }
+
   /// 로그아웃
   Future<void> logout() async {
     final usecase = ref.read(logoutUseCaseProvider);
