@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'nickname', 'first_name', 'last_name',
+            'id', 'email', 'nickname', 'name', 'first_name', 'last_name',
             'phone_number', 'profile_image',
             'role', 'party', 'is_verified', 'reputation',
             'area', 'area_name',
@@ -48,7 +48,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'email', 'password', 'password2',
-            'nickname', 'first_name', 'last_name',
+            'nickname', 'name',
             'phone_number', 'role'
         ]
 
@@ -61,8 +61,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # nickname이 없으면 자동 생성
         if not attrs.get('nickname'):
-            if attrs.get('first_name') and attrs.get('last_name'):
-                attrs['nickname'] = f"{attrs['last_name']}{attrs['first_name']}"
+            if attrs.get('name'):
+                attrs['nickname'] = attrs['name']
             else:
                 attrs['nickname'] = attrs['email'].split('@')[0][:50]
 
@@ -75,8 +75,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             password=validated_data['password'],
             nickname=validated_data.get('nickname', ''),
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
+            name=validated_data.get('name', ''),
             phone_number=validated_data.get('phone_number', ''),
             role=validated_data.get('role', 'citizen')
         )

@@ -33,9 +33,10 @@ class AuthState extends _$AuthState {
     required String email,
     required String password,
     required String password2,
-    String? firstName,
-    String? lastName,
+    String? name,
     String? phoneNumber,
+    String? nickname,
+    String? role,
   }) async {
     state = const AsyncLoading();
 
@@ -44,9 +45,10 @@ class AuthState extends _$AuthState {
       email: email,
       password: password,
       password2: password2,
-      firstName: firstName,
-      lastName: lastName,
+      name: name,
       phoneNumber: phoneNumber,
+      nickname: nickname,
+      role: role,
     );
 
     result.fold(

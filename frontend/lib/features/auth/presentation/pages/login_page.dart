@@ -54,6 +54,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
   }
 
+  Future<void> _handleNaverLogin() async {
+    await ref.read(authStateProvider.notifier).loginWithNaver();
+
+    if (!mounted) return;
+
+    final authState = ref.read(authStateProvider);
+    authState.whenData((user) {
+      if (user != null) {
+        context.go('/'); // 홈으로 이동
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
@@ -73,13 +86,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 로고
-                const Text(
-                  'BARO',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 200,
+                  height: 115.7,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 48),
 
@@ -166,6 +177,43 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     backgroundColor: const Color(0xFFFEE500), // Kakao yellow
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
+                ),
+                const SizedBox(height: 12),
+
+                // Naver 로그인 버튼
+                ElevatedButton.icon(
+                  onPressed: authState.isLoading ? null : _handleNaverLogin,
+                  icon: const Icon(Icons.search, color: Colors.white),
+                  label: const Text(
+                    '네이버로 로그인',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF03C75A), // Naver green
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // 회원가입 링크
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      '계정이 없으신가요?',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/register'),
+                      child: const Text(
+                        '회원가입',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
 
                 // 에러 메시지

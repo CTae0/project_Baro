@@ -49,6 +49,9 @@ class CustomUser(AbstractUser):
     # 이메일을 고유 식별자로 사용
     email = models.EmailField('이메일', unique=True, db_index=True)
 
+    # 이름 (한국식 - 전체 이름)
+    name = models.CharField('이름', max_length=100, blank=True)
+
     # 추가 필드
     phone_number = models.CharField('전화번호', max_length=15, blank=True)
     profile_image = models.ImageField(
@@ -118,7 +121,7 @@ class CustomUser(AbstractUser):
 
     # 이메일을 인증 식별자로 사용
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = []  # name은 선택사항
 
     class Meta:
         db_table = 'users'
@@ -137,6 +140,9 @@ class CustomUser(AbstractUser):
     @property
     def full_name(self):
         """전체 이름 반환"""
+        if self.name:
+            return self.name
+        # first_name/last_name이 있는 경우 (기존 데이터 호환성)
         if self.first_name and self.last_name:
             return f"{self.last_name}{self.first_name}"
         return self.email

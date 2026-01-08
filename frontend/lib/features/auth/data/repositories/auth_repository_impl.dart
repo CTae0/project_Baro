@@ -32,18 +32,20 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     required String password2,
-    String? firstName,
-    String? lastName,
+    String? name,
     String? phoneNumber,
+    String? nickname,
+    String? role,
   }) async {
     try {
       final response = await remoteDataSource.register({
         'email': email,
         'password': password,
         'password2': password2,
-        if (firstName != null) 'first_name': firstName,
-        if (lastName != null) 'last_name': lastName,
+        if (name != null) 'name': name,
         if (phoneNumber != null) 'phone_number': phoneNumber,
+        if (nickname != null) 'nickname': nickname,
+        if (role != null) 'role': role,
       });
 
       // 토큰 저장

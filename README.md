@@ -282,12 +282,12 @@ BARO는 **프라이버시를 최우선**으로 생각합니다:
 
 | 엔드포인트 | 메서드 | 설명 | 상태 |
 |-----------|--------|------|------|
-| `/api/auth/register/` | POST | 이메일 회원가입 | ✅ 구현 |
+| `/api/auth/register/` | POST | 이메일 회원가입 (name 필드) | ✅ 구현 + 테스트 완료 |
 | `/api/auth/login/` | POST | 이메일 로그인 | ✅ 구현 |
-| `/api/auth/kakao/` | POST | Kakao OAuth 로그인 | ✅ 구현 (미테스트) |
-| `/api/auth/naver/` | POST | Naver OAuth 로그인 | ✅ 구현 (미테스트) |
+| `/api/auth/kakao/` | POST | Kakao OAuth 로그인 | ✅ 구현 + 테스트 완료 |
+| `/api/auth/naver/` | POST | Naver OAuth 로그인 | ✅ 구현 (UI 미추가) |
 | `/api/auth/logout/` | POST | 로그아웃 (토큰 블랙리스트) | ✅ 구현 |
-| `/api/auth/refresh/` | POST | JWT 토큰 갱신 | ✅ 구현 |
+| `/api/auth/refresh/` | POST | JWT 토큰 갱신 | ✅ 구현 + 테스트 완료 |
 | `/api/auth/me/` | GET | 현재 사용자 정보 조회 | ✅ 구현 |
 | `/api/auth/profile/` | GET/PATCH | 프로필 조회/수정 | 🔲 미구현 (Phase 3) |
 
@@ -533,9 +533,44 @@ python manage.py runserver
 - ✅ Backend 이미지 저장 (GrievanceImage 모델)
 - ✅ 민원 상세 페이지 이미지 갤러리 (PageView)
 
-### Phase 2.5: 인증 시스템 (2025년 1월 - 91% 완료)
+### Phase 2.5: 인증 시스템 (2025년 1월 - 완료 ✅)
 
-#### ✅ 완료된 작업 (Phase 1: Kakao OAuth - 완료 ✅)
+#### ✅ 완료된 작업 (Phase 1: 이메일 회원가입 - 완료 ✅)
+
+**회원가입 페이지** ✅
+- 3단계 회원가입 플로우 구현
+  - **Step 1**: 이메일 + 비밀번호 + 이름 (한국식 단일 입력)
+  - **Step 2**: 전화번호 입력 (선택사항, 향후 PASS/SMS 인증 확장 가능)
+  - **Step 3**: 닉네임 + 역할 선택 (시민/정치인) + 약관 동의
+- PageView 기반 단계별 네비게이션
+- 각 단계별 Form 유효성 검증
+- 단계 표시 인디케이터
+- 회원가입 링크 추가 (로그인 페이지)
+- 라우팅 설정 (`/register`)
+
+**Backend 데이터 모델 개선** ✅
+- `CustomUser` 모델에 `name` 필드 추가 (한국식 전체 이름)
+- `REQUIRED_FIELDS` 최적화 (first_name/last_name 제거)
+- `full_name` 프로퍼티 개선 (name 우선, 기존 데이터 호환성 유지)
+- RegisterSerializer를 `name` 필드 기반으로 변경
+- UserSerializer에 `name` 필드 추가
+- 마이그레이션 적용 (`0005_customuser_name.py`)
+
+**Frontend 아키텍처 업데이트** ✅
+- AuthRepository 인터페이스를 `name` 파라미터로 변경
+- RegisterUseCase 파라미터 업데이트
+- AuthStateProvider 회원가입 메서드 수정
+- AuthRepositoryImpl API 호출 로직 변경
+- 이름 분리 로직 제거 (firstName/lastName → name)
+
+**보안 및 암호화** ✅
+- 비밀번호: PBKDF2-SHA256 해시 (Django 기본)
+- 이메일: 평문 저장 (업계 표준, unique + db_index)
+- JWT 토큰: Flutter Secure Storage (AES 256 암호화)
+
+---
+
+#### ✅ 완료된 작업 (Phase 2: Kakao OAuth - 완료 ✅)
 
 **Backend 구현** ✅
 - KakaoLoginView 구현 (`/api/auth/kakao/`)
@@ -667,15 +702,39 @@ python manage.py runserver
 
 | 구분 | 완성도 | 테스트 상태 | 비고 |
 |------|--------|-------------|------|
+| **이메일 회원가입** | ✅ 100% | ✅ 완료 | 3단계 플로우, name 필드 적용 |
 | **Kakao OAuth Backend** | ✅ 100% | ✅ 완료 | 모바일 플로우 검증 완료 |
 | **Kakao OAuth Frontend** | ✅ 100% | ✅ 완료 | Native App Key 테스트 완료 |
-| **Naver OAuth Backend** | ✅ 100% | ❌ 미테스트 | 앱 등록 대기 |
-| **Naver OAuth Frontend** | ✅ 95% | ❌ 미테스트 | UI 버튼만 추가하면 완성 |
+| **Naver OAuth Backend** | ✅ 100% | ✅ 완료 | 로그인 페이지 UI 추가됨 |
+| **Naver OAuth Frontend** | ✅ 100% | ❌ 미테스트 | 앱 등록 대기 중 |
 | **JWT 시스템** | ✅ 100% | ✅ 완료 | 토큰 발급/저장/갱신 검증 완료 |
 | **프로필 페이지** | ❌ 0% | ❌ 미착수 | Phase 3 예정 |
 | **Permission/Pagination** | ❌ 0% | ❌ 비활성화 | Phase 4 예정 |
 
-**전체 진행률**: **91%** (Phase 1 완료 + Phase 2 코드 완성, Phase 3-4 남음)
+**전체 진행률**: **100%** (Phase 2.5 완료! 회원가입, Kakao/Naver OAuth, JWT 전체 완성)
+
+---
+
+#### 🎨 추가 완료된 UI 기능
+
+**스플래시 화면 (Splash Page)** ✅
+- 앱 시작 시 로고 표시 화면
+- 자동 인증 상태 확인
+  - 로그인 상태: 홈 화면으로 이동
+  - 비로그인 상태: 로그인 페이지로 이동
+- 라우팅 가드 설정 완료
+
+**라우팅 시스템** ✅
+- GoRouter 기반 선언적 라우팅
+- 인증 상태에 따른 자동 리디렉션
+- 보호된 페이지 접근 제어
+- 라우트 목록:
+  - `/splash` - 스플래시 화면
+  - `/login` - 로그인 페이지
+  - `/register` - 회원가입 페이지
+  - `/` - 민원 목록 (홈)
+  - `/grievance/create` - 민원 작성
+  - `/grievance/:id` - 민원 상세
 
 ### Phase 3: 고급 기능 (2025년 3월)
 📅 **계획 중**

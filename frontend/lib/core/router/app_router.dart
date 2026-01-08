@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/providers/auth_state_provider.dart';
 import '../../features/grievance/presentation/pages/grievance_list_page.dart';
 import '../../features/grievance/presentation/pages/grievance_create_page.dart';
 import '../../features/grievance/presentation/pages/grievance_detail_page.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
 
 part 'app_router.g.dart';
 
@@ -14,8 +16,12 @@ part 'app_router.g.dart';
 class Routes {
   Routes._();
 
+  // 스플래시
+  static const String splash = '/splash';
+
   // 인증 관련
   static const String login = '/login';
+  static const String register = '/register';
 
   // 민원 관련
   static const String grievanceList = '/';
@@ -33,21 +39,28 @@ GoRouter appRouter(AppRouterRef ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
-    initialLocation: Routes.grievanceList,
+    initialLocation: Routes.splash,
     debugLogDiagnostics: true,
 
     // 라우트 가드: 인증 체크
     redirect: (context, state) {
       final isLoggedIn = authState.value != null;
+      final isSplashPage = state.matchedLocation == Routes.splash;
       final isLoginPage = state.matchedLocation == Routes.login;
+      final isRegisterPage = state.matchedLocation == Routes.register;
+
+      // 스플래시 화면은 항상 허용
+      if (isSplashPage) {
+        return null;
+      }
 
       // 비로그인 상태에서 보호된 페이지 접근 시 로그인 페이지로
-      if (!isLoggedIn && !isLoginPage) {
+      if (!isLoggedIn && !isLoginPage && !isRegisterPage) {
         return Routes.login;
       }
 
-      // 로그인 상태에서 로그인 페이지 접근 시 홈으로
-      if (isLoggedIn && isLoginPage) {
+      // 로그인 상태에서 로그인/회원가입 페이지 접근 시 홈으로
+      if (isLoggedIn && (isLoginPage || isRegisterPage)) {
         return Routes.grievanceList;
       }
 
@@ -55,6 +68,16 @@ GoRouter appRouter(AppRouterRef ref) {
     },
 
     routes: [
+      // 스플래시 화면
+      GoRoute(
+        path: Routes.splash,
+        name: 'splash',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const SplashPage(),
+        ),
+      ),
+
       // 로그인 페이지
       GoRoute(
         path: Routes.login,
@@ -62,6 +85,16 @@ GoRouter appRouter(AppRouterRef ref) {
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: const LoginPage(),
+        ),
+      ),
+
+      // 회원가입 페이지
+      GoRoute(
+        path: Routes.register,
+        name: 'register',
+        pageBuilder: (context, state) => MaterialPage(
+          key: state.pageKey,
+          child: const RegisterPage(),
         ),
       ),
 
