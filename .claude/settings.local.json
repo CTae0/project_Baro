@@ -30,7 +30,14 @@
       "Bash(cp:*)",
       "Bash(mkdir:*)",
       "Bash(find:*)",
-      "Bash(python manage.py migrate:*)"
+      "Bash(python manage.py migrate:*)",
+      "Bash(dir:*)",
+      "Bash(flutter pub deps:*)",
+      "Bash(flutter clean:*)",
+      "Bash(del \"d:\\\\Proejct_BARO\\\\frontend\\\\lib\\\\core\\\\network\\\\parse_error_logger.dart\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(flutter devices:*)"
     ]
   }
 }

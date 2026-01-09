@@ -11,6 +11,11 @@ class DioClient {
   late final Dio _dio;
   final Logger _logger = Logger();
 
+  // 토큰 메모리 캐시
+  String? _cachedToken;
+  DateTime? _tokenCacheTime;
+  static const _cacheExpiry = Duration(minutes: 5);
+
   DioClient({String? baseUrl}) {
     // .env에서 API URL 읽기 (플랫폼별 자동 선택)
     final apiUrl = baseUrl ?? _getApiUrl();
@@ -78,6 +83,12 @@ class DioClient {
   InterceptorsWrapper _createInterceptor() {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
+        // 토큰 갱신 API 호출 시 인터셉터 건너뛰기
+        if (options.extra['skipAuthInterceptor'] == true) {
+          _logger.d('Skipping auth interceptor for ${options.path}');
+          return handler.next(options);
+        }
+
         // JWT 토큰 자동 주입
         final token = await _getAuthToken();
         if (token != null) {
@@ -104,6 +115,12 @@ class DioClient {
         _logger.e('ERROR MESSAGE: ${error.message}');
         _logger.e('ERROR DATA: ${error.response?.data}');
 
+        // 토큰 갱신 API 자체가 실패한 경우 재시도하지 않음
+        if (error.requestOptions.extra['skipAuthInterceptor'] == true) {
+          _logger.w('Token refresh API failed - not retrying');
+          return handler.next(error);
+        }
+
         // 401 Unauthorized 처리 - 토큰 갱신 시도
         if (error.response?.statusCode == 401) {
           _logger.w('401 Unauthorized - 토큰 갱신 시도');
@@ -124,7 +141,7 @@ class DioClient {
               );
               return handler.resolve(cloneReq);
             } else {
-              _logger.e('토큰 갱신 실패 - 새 토큰 없음');
+              _logger.e('토큰 갱신 실패 - 새 토큰 없음, 저장된 토큰 삭제됨');
             }
           } catch (e) {
             _logger.e('Token refresh failed: $e');
@@ -137,22 +154,45 @@ class DioClient {
     );
   }
 
-  /// Access Token 가져오기
+  /// Access Token 가져오기 (메모리 캐싱 적용)
   Future<String?> _getAuthToken() async {
+    // 캐시 유효성 체크
+    if (_cachedToken != null && _tokenCacheTime != null) {
+      if (DateTime.now().difference(_tokenCacheTime!) < _cacheExpiry) {
+        return _cachedToken; // 캐시 사용
+      }
+    }
+
+    // 캐시 만료 또는 없음 -> 스토리지 읽기
     const storage = FlutterSecureStorage();
-    return await storage.read(key: 'access_token');
+    _cachedToken = await storage.read(key: 'access_token');
+    _tokenCacheTime = DateTime.now();
+    return _cachedToken;
+  }
+
+  /// 토큰 캐시 무효화 (토큰 갱신 시 호출)
+  void invalidateTokenCache() {
+    _cachedToken = null;
+    _tokenCacheTime = null;
   }
 
   /// JWT 토큰 갱신
   Future<String?> _refreshAuthToken() async {
     const storage = FlutterSecureStorage();
     final refreshToken = await storage.read(key: 'refresh_token');
-    if (refreshToken == null) return null;
+    if (refreshToken == null) {
+      _logger.w('Refresh token not found');
+      return null;
+    }
 
     try {
+      // 인터셉터를 우회하여 토큰 갱신 API 호출
       final response = await _dio.post(
         '/auth/refresh/',
         data: {'refresh': refreshToken},
+        options: Options(
+          extra: {'skipAuthInterceptor': true}, // 인터셉터 건너뛰기 플래그
+        ),
       );
 
       final newAccessToken = response.data['access'];
@@ -162,12 +202,20 @@ class DioClient {
       await storage.write(key: 'access_token', value: newAccessToken);
       await storage.write(key: 'refresh_token', value: newRefreshToken);
 
+      // 캐시 무효화
+      invalidateTokenCache();
+
+      _logger.i('Token refreshed successfully');
       return newAccessToken;
     } catch (e) {
       _logger.e('Failed to refresh token: $e');
       // 토큰 갱신 실패 시 토큰 삭제
       await storage.delete(key: 'access_token');
       await storage.delete(key: 'refresh_token');
+
+      // 캐시 무효화
+      invalidateTokenCache();
+
       return null;
     }
   }

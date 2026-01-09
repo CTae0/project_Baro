@@ -63,7 +63,8 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
   final localStorage = ref.watch(authLocalDataSourceProvider);
   final kakaoService = ref.watch(kakaoServiceProvider);
   final naverService = ref.watch(naverServiceProvider);
-  return AuthRepositoryImpl(api, localStorage, kakaoService, naverService);
+  final dioClient = ref.watch(dioClientProvider);
+  return AuthRepositoryImpl(api, localStorage, kakaoService, naverService, dioClient);
 }
 
 // ============================================================================

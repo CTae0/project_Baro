@@ -117,6 +117,27 @@ DATABASES = {
     }
 }
 
+# Cache Configuration (Redis)
+# https://docs.djangoproject.com/en/5.0/topics/cache/
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SOCKET_CONNECT_TIMEOUT': 5,
+            'SOCKET_TIMEOUT': 5,
+            'IGNORE_EXCEPTIONS': True,  # Redis 다운 시에도 앱 동작 (성능 최적화)
+        },
+        'KEY_PREFIX': 'baro',  # 키 충돌 방지
+        'TIMEOUT': 300,  # 기본 캐시 타임아웃 (5분)
+    }
+}
+
+# 세션도 Redis로 저장 (선택사항 - 성능 향상)
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# SESSION_CACHE_ALIAS = 'default'
+
 # Custom User Model
 AUTH_USER_MODEL = 'users.CustomUser'
 

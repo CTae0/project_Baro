@@ -5,6 +5,7 @@
 from django.contrib import admin
 from django.contrib.gis.admin import GISModelAdmin
 from django.utils.html import format_html
+from django.db.models import Count
 from apps.grievances.models import Grievance, GrievanceImage, Like, Area, GrievanceSecret
 
 
@@ -46,10 +47,18 @@ class AreaAdmin(GISModelAdmin):
         }),
     )
 
+    def get_queryset(self, request):
+        """N+1 쿼리 방지: 민원 개수를 annotate로 미리 계산"""
+        queryset = super().get_queryset(request)
+        return queryset.annotate(
+            _grievance_count=Count('grievances', distinct=True)
+        )
+
     def grievance_count(self, obj):
-        """해당 지역의 민원 개수"""
-        return obj.grievances.count()
+        """해당 지역의 민원 개수 (annotate 사용)"""
+        return obj._grievance_count
     grievance_count.short_description = '민원 수'
+    grievance_count.admin_order_field = '_grievance_count'  # 정렬 가능
 
 
 @admin.register(Grievance)

@@ -1,28 +1,21 @@
 import 'package:dio/dio.dart';
-import 'package:logger/logger.dart';
 import 'package:retrofit/retrofit.dart';
 
-/// Custom ParseErrorLogger implementation for Retrofit
+/// Dummy ParseErrorLogger - Retrofit generator 버그 우회용
 ///
-/// Note: The generated code only passes 3 parameters (error, stackTrace, options)
-/// but ParseErrorLogger abstract class requires 4 parameters.
-/// We make the 4th parameter optional with a default value to satisfy both.
-class CustomParseErrorLogger extends ParseErrorLogger {
-  final Logger _logger = Logger();
-
+/// Retrofit 4.9.1의 ParseErrorLogger는 4개의 required parameters를 요구하지만,
+/// retrofit_generator 9.7.0은 3개만 전달하는 버그가 있습니다.
+///
+/// 이 더미 구현은 절대 호출되지 않도록 null로 전달됩니다.
+class DummyParseErrorLogger extends ParseErrorLogger {
   @override
   void logError(
     Object error,
     StackTrace stackTrace,
     RequestOptions options,
-    Response<dynamic> response,
+    Response response,
   ) {
-    _logger.e(
-      'Retrofit Parse Error',
-      error: error,
-      stackTrace: stackTrace,
-    );
-    _logger.e('Request: ${options.method} ${options.uri}');
-    _logger.e('Response status: ${response.statusCode}');
+    // 이 메서드는 절대 호출되지 않습니다 (errorLogger: null로 전달)
+    throw UnimplementedError('DummyParseErrorLogger should never be called');
   }
 }

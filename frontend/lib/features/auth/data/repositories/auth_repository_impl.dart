@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
 import '../../../../core/error/failures.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../domain/entities/auth_tokens_entity.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -18,6 +19,7 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDataSource localDataSource;
   final KakaoService kakaoService;
   final NaverService naverService;
+  final DioClient dioClient;
   final Logger _logger = Logger();
 
   AuthRepositoryImpl(
@@ -25,6 +27,7 @@ class AuthRepositoryImpl implements AuthRepository {
     this.localDataSource,
     this.kakaoService,
     this.naverService,
+    this.dioClient,
   );
 
   @override
@@ -52,6 +55,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.saveAccessToken(response.tokens.access);
       await localDataSource.saveRefreshToken(response.tokens.refresh);
 
+      // 토큰 캐시 무효화
+      dioClient.invalidateTokenCache();
+
       return Right(response.user.toEntity());
     } on SocketException {
       return const Left(NetworkFailure());
@@ -76,6 +82,9 @@ class AuthRepositoryImpl implements AuthRepository {
       // 토큰 저장
       await localDataSource.saveAccessToken(response.access);
       await localDataSource.saveRefreshToken(response.refresh);
+
+      // 토큰 캐시 무효화
+      dioClient.invalidateTokenCache();
 
       // 사용자 정보 조회
       final userResult = await getCurrentUser();
@@ -112,9 +121,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.saveRefreshToken(response.tokens.refresh);
       _logger.i('JWT 토큰 저장 완료');
 
-      // 저장 완료 대기 (타이밍 이슈 방지)
-      await Future.delayed(const Duration(milliseconds: 100));
-      _logger.d('토큰 저장 대기 완료');
+      // 토큰 캐시 무효화
+      dioClient.invalidateTokenCache();
 
       _logger.i('=== Kakao 로그인 성공 ===');
       return Right(response.user.toEntity());
@@ -155,9 +163,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.saveRefreshToken(response.tokens.refresh);
       _logger.i('JWT 토큰 저장 완료');
 
-      // 저장 완료 대기 (타이밍 이슈 방지)
-      await Future.delayed(const Duration(milliseconds: 100));
-      _logger.d('토큰 저장 대기 완료');
+      // 토큰 캐시 무효화
+      dioClient.invalidateTokenCache();
 
       _logger.i('=== Naver 로그인 성공 ===');
       return Right(response.user.toEntity());
@@ -237,6 +244,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.saveAccessToken(response.access);
       await localDataSource.saveRefreshToken(response.refresh);
 
+      // 토큰 캐시 무효화
+      dioClient.invalidateTokenCache();
+
       return Right(AuthTokensEntity(
         accessToken: response.access,
         refreshToken: response.refresh,
@@ -264,11 +274,17 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> saveTokens(AuthTokensEntity tokens) async {
     await localDataSource.saveAccessToken(tokens.accessToken);
     await localDataSource.saveRefreshToken(tokens.refreshToken);
+
+    // 토큰 캐시 무효화
+    dioClient.invalidateTokenCache();
   }
 
   @override
-  Future<void> clearTokens() {
-    return localDataSource.clearTokens();
+  Future<void> clearTokens() async {
+    await localDataSource.clearTokens();
+
+    // 토큰 캐시 무효화
+    dioClient.invalidateTokenCache();
   }
 
   @override

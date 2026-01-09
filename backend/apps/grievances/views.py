@@ -66,7 +66,7 @@ class GrievanceViewSet(viewsets.ModelViewSet):
     )
 
     permission_classes = []  # 임시로 인증 비활성화 (테스트용)
-    pagination_class = None  # 페이지네이션 임시 비활성화 (Flutter 테스트용)
+    # pagination_class = None  # ✅ 페이지네이션 활성화됨 (Phase 2 최적화)
     parser_classes = [MultiPartParser, FormParser, JSONParser]  # 모든 액션에서 multipart 지원
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['status', 'location', 'category', 'visibility', 'area']

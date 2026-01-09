@@ -10,10 +10,6 @@ part 'grievance_remote_datasource.g.dart';
 abstract class GrievanceApi {
   factory GrievanceApi(Dio dio, {String? baseUrl}) = _GrievanceApi;
 
-  /// 민원 리스트 조회
-  @GET('/grievances/')
-  Future<List<GrievanceModel>> getGrievances();
-
   /// 민원 상세 조회
   @GET('/grievances/{id}/')
   Future<GrievanceModel> getGrievanceById(@Path('id') String id);
